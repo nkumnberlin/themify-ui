@@ -1,13 +1,24 @@
 {
-  "name": "@monorepo-template/scripts",
+  "name": "@themify-ui/scripts",
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "@monorepo-template/core": "*",
+    "@langchain/community": "0.3.42",
+    "@langchain/core": "^0.3.55",
+    "@langchain/deepseek": "^0.0.1",
+    "@langchain/openai": "^0.5.10",
+    "dotenv": "^16.5.0",
+    "langchain": "^0.3.25",
+    "openai": "^4.98.0",
     "sst": "*"
   },
   "scripts": {
     "shell": "sst shell tsx"
+  },
+  "exports": {
+    "./*": [
+      "./src/*.ts"
+    ]
   },
   "devDependencies": {
     "@types/node": "^22",

@@ -1,9 +1,6 @@
 {
-  "name": "monorepo-template",
+  "name": "themify-ui",
   "version": "0.0.0",
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {},
   "devDependencies": {
     "@tsconfig/node22": "^22",
