@@ -36,12 +36,13 @@ Generate a React functional component in TypeScript that:
 
 const prompt = new PromptTemplate({
     template,
-    inputVariables: ["tokens", "label", "request"],
+            inputVariables: ["tokens", "label", "request"],
 });
 
 console.log( process.env.OPENROUTER_API_KEY);
 
 const llm = new ChatOpenAI({
+
     model: "deepseek/deepseek-chat-v3-0324:free",
     apiKey: process.env.OPENROUTER_API_KEY,
     configuration: {
