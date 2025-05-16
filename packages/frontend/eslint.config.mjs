@@ -1,9 +1,11 @@
 import { globalIgnores } from "eslint/config";
 import eslintPluginUnicorn from "eslint-plugin-unicorn";
 import eslintConfigPrettier from "eslint-config-prettier";
+// eslint-disable-next-line unicorn/import-style
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FlatCompat } from "@eslint/eslintrc";
+import tailwind from "eslint-plugin-tailwindcss";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,6 +16,7 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...tailwind.configs["flat/recommended"],
   eslintPluginUnicorn.configs.recommended,
   eslintConfigPrettier,
   globalIgnores([
