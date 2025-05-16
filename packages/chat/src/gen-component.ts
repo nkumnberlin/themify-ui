@@ -1,7 +1,6 @@
-
-import { config } from "dotenv";
-import { ChatOpenAI } from "@langchain/openai";
-import { PromptTemplate } from "@langchain/core/prompts";
+import {config} from "dotenv";
+import {ChatOpenAI} from "@langchain/openai";
+import {PromptTemplate} from "@langchain/core/prompts";
 
 function formatTokens(tokens: Record<string, any>, prefix = ''): string {
     let result = '';
@@ -42,7 +41,6 @@ const prompt = new PromptTemplate({
 console.log( process.env.OPENROUTER_API_KEY);
 
 const llm = new ChatOpenAI({
-
     model: "deepseek/deepseek-chat-v3-0324:free",
     apiKey: process.env.OPENROUTER_API_KEY,
     configuration: {

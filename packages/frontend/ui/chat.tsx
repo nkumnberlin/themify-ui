@@ -23,7 +23,6 @@ export default function ChatArea() {
     };
     setMessages((prev) => [...prev, newMessage]);
 
-    // Simulate AI response
     setTimeout(() => {
       const aiMessage: Message = {
         id: Date.now() + 1,
@@ -38,7 +37,6 @@ export default function ChatArea() {
 
   return (
     <div className="flex h-full w-full flex-col">
-      {/* Message Display */}
       <div className="flex-1 space-y-2 overflow-y-auto p-4">
         {messages.map((msg) => (
           <div
