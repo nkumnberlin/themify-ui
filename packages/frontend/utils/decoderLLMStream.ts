@@ -1,0 +1,68 @@
+import { Message } from "@/ui/chat";
+
+type DecoderLLMStream = {
+  setMessages: (updater: (prev: Message[]) => Message[]) => void;
+  reader: ReadableStreamDefaultReader<Uint8Array>;
+  decoder: TextDecoder;
+  aiContent: string;
+};
+
+// to use with llm.stream
+export async function decoderLLMStream({
+  setMessages,
+  reader,
+  decoder,
+  aiContent,
+}: DecoderLLMStream) {
+  const aiMessageId = Date.now();
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: aiMessageId,
+      role: "ai",
+      content: "AI is thinking...",
+      isLoading: true,
+    },
+  ]);
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    console.log("buffer", buffer);
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? ""; // keep any incomplete line
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      try {
+        const parsed = JSON.parse(line);
+        const content = parsed?.response ?? "";
+        if (content) {
+          aiContent += content;
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId
+                ? { ...msg, content: aiContent, isLoading: false }
+                : msg,
+            ),
+          );
+        }
+      } catch (err) {
+        console.error("Failed to parse stream line:", err);
+      }
+    }
+  }
+
+  setMessages((prev) =>
+    prev.map((msg) =>
+      msg.id === aiMessageId
+        ? {
+            ...msg,
+            content: aiContent || "Done. - There might be an error",
+            isLoading: false,
+          }
+        : msg,
+    ),
+  );
+}

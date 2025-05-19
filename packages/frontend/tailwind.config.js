@@ -1,4 +1,5 @@
 import tokens from "./tokens.json";
+
 module.exports = {
   theme: {
     extend: {
@@ -8,4 +9,5 @@ module.exports = {
       fontSize: tokens.fontSizes,
     },
   },
+  plugins: [require("@tailwindcss/typography")],
 };
