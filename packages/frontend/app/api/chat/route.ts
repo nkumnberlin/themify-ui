@@ -26,6 +26,9 @@ export async function POST(req: Request) {
   const { content } = await req.json();
 
   const stream = await humanMessageInput({ content });
+  if (!stream) {
+    return null;
+  }
   // return streamIterableReadAbleStream(stream)
   const encoder = new TextEncoder();
   const readableStream = new ReadableStream({
