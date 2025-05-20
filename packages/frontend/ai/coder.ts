@@ -15,8 +15,7 @@ const coderLLM = new AzureChatOpenAI({
   azureOpenAIApiInstanceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME, // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
   azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME, // In Node.js defaults to process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME
   azureOpenAIApiVersion: process.env.AZURE_OPENAI_API_VERSION, // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
-  azureOpenAIBasePath:
-    "https://nicholas-llm.openai.azure.com/openai/deployments",
+  azureOpenAIBasePath: process.env.AZURE_OPENAI_API_BASE_PATH,
   streaming: true,
 });
 
