@@ -2,9 +2,10 @@
 import ReactMarkdown from "react-markdown";
 import { useForm } from "react-hook-form";
 import { Input } from "@headlessui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { decoderLLMStream } from "@/utils/decoderLLMStream";
+import { LLMType } from "@/ai/interface";
 
 export type Message = {
   id: number;
@@ -17,20 +18,24 @@ const initialMessages: Message[] = [
   {
     id: 1,
     role: "ai",
-    content: "Hello! What do you want to build today?",
+    content:
+      "Hello! My name is Themify, how can I help you to build what you want today?",
   },
 ];
 
 export default function ChatArea() {
-  const { register, handleSubmit, reset } = useForm<{ message: string }>();
+  const { register, handleSubmit, reset, setFocus } = useForm<{
+    message: string;
+  }>();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isDisabled, setIsDisabled] = useState(false);
+  const [llmType, setLlmType] = useState<LLMType>("architect");
 
   const { mutate } = useMutation({
     mutationFn: async (message: string) => {
       const response = await fetch("/api/chat", {
         method: "POST",
-        body: JSON.stringify({ content: message }),
+        body: JSON.stringify({ content: message, llmType }),
         headers: {
           "Content-Type": "application/json",
         },
@@ -45,9 +50,13 @@ export default function ChatArea() {
     },
     onSuccess: () => {
       setIsDisabled(false);
+      setFocus("message");
     },
   });
 
+  useEffect(() => {
+    setFocus("message");
+  }, []);
   const onSubmit = ({ message }: { message: string }) => {
     if (!message.trim()) return;
 
@@ -63,6 +72,7 @@ export default function ChatArea() {
     reset();
   };
 
+  // check if text contains "start coding" than render a button to switch to coder mode
   return (
     <div className="flex h-full w-full flex-col">
       <div className="flex-1 space-y-2 overflow-y-auto p-4">

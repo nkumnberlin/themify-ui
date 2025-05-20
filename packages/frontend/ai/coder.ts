@@ -1,11 +1,11 @@
 "use server";
 import { AzureChatOpenAI } from "@langchain/openai";
-import { architectInstruction } from "@/ai/instructions/architect";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
+import { coderInstructions } from "@/ai/instructions/coder";
 
-const architectLLM = new AzureChatOpenAI({
+const coderLLM = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
   temperature: 0,
   maxTokens: undefined,
@@ -19,16 +19,16 @@ const architectLLM = new AzureChatOpenAI({
   streaming: true,
 });
 
-const architectMemory = new MemorySaver();
+const coderMemory = new MemorySaver();
 
-const architectPrompt = new SystemMessage(architectInstruction);
+const coderPrompt = new SystemMessage(coderInstructions);
 
-const architectAgent = createReactAgent({
-  llm: architectLLM,
+const coderAgent = createReactAgent({
+  llm: coderLLM,
   // https://js.langchain.com/docs/how_to/migrate_agent prompt templates. check
-  prompt: architectPrompt,
+  prompt: coderPrompt,
   tools: [],
-  checkpointSaver: architectMemory,
+  checkpointSaver: coderMemory,
 });
 
 const langGraphConfig = {
@@ -36,7 +36,7 @@ const langGraphConfig = {
 };
 
 async function handleUserInput(input: string) {
-  return await architectAgent.stream(
+  return await coderAgent.stream(
     {
       messages: [{ role: "user", content: input }],
     },
@@ -44,6 +44,6 @@ async function handleUserInput(input: string) {
   );
 }
 
-export async function architectAgentLLM({ content }: { content: string }) {
+export async function coderAgentLLM({ content }: { content: string }) {
   return await handleUserInput(content);
 }

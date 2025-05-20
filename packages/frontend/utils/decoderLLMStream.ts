@@ -1,4 +1,5 @@
 import { Message } from "@/ui/chat";
+import { AgentData } from "@/ai/interface";
 
 type DecoderLLMStream = {
   setMessages: (updater: (prev: Message[]) => Message[]) => void;
@@ -25,28 +26,30 @@ export async function decoderLLMStream({
     },
   ]);
   let buffer = "";
-
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
-    console.log("buffer", buffer);
     const lines = buffer.split("\n");
-    buffer = lines.pop() ?? ""; // keep any incomplete line
+    buffer = lines.pop() ?? "";
+
     for (const line of lines) {
       if (!line.trim()) continue;
       try {
-        const parsed = JSON.parse(line);
-        const content = parsed?.response ?? "";
-        if (content) {
-          aiContent += content;
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === aiMessageId
-                ? { ...msg, content: aiContent, isLoading: false }
-                : msg,
-            ),
-          );
+        const parsed: AgentData = JSON.parse(line);
+        console.log(parsed);
+        for (const message of parsed.agent.messages) {
+          const content = message.kwargs.content ?? "";
+          if (content) {
+            aiContent += content;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === aiMessageId
+                  ? { ...msg, content: aiContent, isLoading: false }
+                  : msg,
+              ),
+            );
+          }
         }
       } catch (err) {
         console.error("Failed to parse stream line:", err);

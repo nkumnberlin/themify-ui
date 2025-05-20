@@ -1,37 +1,35 @@
 import { NextResponse } from "next/server";
-import { humanMessageInput } from "@/ai/architect";
+import { architectAgentLLM } from "@/ai/architect";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
+import { coderAgentLLM } from "@/ai/coder";
 
-function streamIterableReadAbleStream(stream: IterableReadableStream<string>) {
-  const encoder = new TextEncoder();
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      for await (const chunk of stream) {
-        controller.enqueue(encoder.encode(chunk));
-      }
-      controller.close();
-    },
-  });
+export async function POST(req: Request) {
+  const { content, llmType } = await req.json();
+  let stream;
+  if (llmType === "coder") {
+    stream = await coderAgentLLM({ content });
+  }
+  if (llmType === "architect") {
+    stream = await architectAgentLLM({ content });
+  }
+  if (!stream) {
+    return null;
+  }
+
+  const readableStream = streamIterableReadAbleStream(stream);
 
   return new NextResponse(readableStream, {
     headers: {
-      "Content-Type": "text/plain",
+      "Content-Type": "application/json",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
     },
   });
 }
 
-export async function POST(req: Request) {
-  const { content } = await req.json();
-
-  const stream = await humanMessageInput({ content });
-  if (!stream) {
-    return null;
-  }
-  // return streamIterableReadAbleStream(stream)
+function streamIterableReadAbleStream(stream: IterableReadableStream<string>) {
   const encoder = new TextEncoder();
-  const readableStream = new ReadableStream({
+  return new ReadableStream({
     async start(controller) {
       for await (const chunk of stream) {
         // Add newline as a delimiter between JSON chunks
@@ -39,14 +37,6 @@ export async function POST(req: Request) {
         controller.enqueue(encoder.encode(serialized + "\n"));
       }
       controller.close();
-    },
-  });
-
-  return new NextResponse(readableStream, {
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
     },
   });
 }
