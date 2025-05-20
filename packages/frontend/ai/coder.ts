@@ -4,6 +4,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { coderInstructions } from "@/ai/instructions/coder";
+import { z } from "zod";
 
 const coderLLM = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
@@ -23,12 +24,26 @@ const coderMemory = new MemorySaver();
 
 const coderPrompt = new SystemMessage(coderInstructions);
 
+const TSXComponentSchema = z.object({
+  tsx: z
+    .string()
+    .describe(
+      "Complete TSX code for a React component, including imports, JSX, and Tailwind CSS classes.",
+    ),
+});
+
+const responseFormat = [
+  "You are a code generation agent. Respond ONLY with valid TSX code for a React component. Do not include any explanations or additional text.",
+  TSXComponentSchema,
+] as const;
+
 const coderAgent = createReactAgent({
   llm: coderLLM,
   // https://js.langchain.com/docs/how_to/migrate_agent prompt templates. check
   prompt: coderPrompt,
   tools: [],
   checkpointSaver: coderMemory,
+  responseFormat,
 });
 
 const langGraphConfig = {

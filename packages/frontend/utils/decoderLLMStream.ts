@@ -1,4 +1,4 @@
-import { Message } from "@/ui/chat";
+import { Message } from "@/components/chat";
 import { AgentData } from "@/ai/interface";
 
 type DecoderLLMStream = {

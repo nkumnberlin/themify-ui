@@ -1,4 +1,3 @@
-"use client";
 import ReactMarkdown from "react-markdown";
 import { useForm } from "react-hook-form";
 import { Input } from "@headlessui/react";
@@ -6,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { decoderLLMStream } from "@/utils/decoderLLMStream";
 import { LLMType } from "@/ai/interface";
+import { Button } from "@/components/ui/button";
+import { startCoding } from "@/ai/instructions/architect";
 
 export type Message = {
   id: number;
@@ -23,15 +24,22 @@ const initialMessages: Message[] = [
   },
 ];
 
-export default function ChatArea() {
+export type ChatAreaProperties = {
+  llmType: LLMType;
+  switchLLMType: (type: LLMType) => void;
+};
+
+export default function ChatArea({
+  llmType,
+  switchLLMType,
+}: ChatAreaProperties) {
   const { register, handleSubmit, reset, setFocus } = useForm<{
     message: string;
   }>();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isDisabled, setIsDisabled] = useState(false);
-  const [llmType, setLlmType] = useState<LLMType>("architect");
 
-  const { mutate } = useMutation({
+  const { mutate, isPending: architectIsPending } = useMutation({
     mutationFn: async (message: string) => {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -66,36 +74,43 @@ export default function ChatArea() {
       content: message,
     };
     setMessages((prev) => [...prev, userMessage]);
-
     mutate(message);
 
     reset();
   };
 
-  // check if text contains "start coding" than render a button to switch to coder mode
+  console.log(messages);
   return (
     <div className="flex h-full w-full flex-col">
       <div className="flex-1 space-y-2 overflow-y-auto p-4">
         {messages.map((msg) => (
           <span key={msg.id}>
-            {msg.isLoading ? (
-              <BloomingLoadingText text={msg.content} />
-            ) : (
-              <div
-                key={msg.id}
-                className={`max-w-xs rounded-lg px-4 py-2 ${
-                  msg.role === "user"
-                    ? "ml-auto bg-blue-500 text-white"
-                    : "mr-auto bg-gray-200 text-gray-900"
-                }`}
-              >
-                <div className="prose prose-sm">
+            <div
+              className={`max-w-xs rounded-lg px-4 py-2 ${
+                msg.role === "user"
+                  ? "ml-auto bg-blue-500"
+                  : "mr-auto bg-gray-200"
+              }`}
+            >
+              <div className="prose prose-sm">
+                {msg.content.toLowerCase().includes("start coding") ? (
+                  <StartCodingMessage
+                    message={msg.content}
+                    onStartCoding={() => {
+                      switchLLMType("coder");
+                      console.log("Start coding message");
+                    }}
+                  />
+                ) : (
                   <ReactMarkdown>{msg.content}</ReactMarkdown>
-                </div>
+                )}
               </div>
-            )}
+            </div>
           </span>
         ))}
+        {architectIsPending && (
+          <BloomingLoadingText text={"AI is thinking..."} />
+        )}
       </div>
 
       <form
@@ -116,7 +131,7 @@ export default function ChatArea() {
 
 function BloomingLoadingText({ text = "AI is thinking..." }) {
   return (
-    <div className="flex items-center space-x-2">
+    <div className="mr-auto max-w-xs rounded-lg bg-gray-200 px-4 py-2 text-gray-900">
       <span>{text}</span>
       <span className="flex space-x-1">
         <span
@@ -133,5 +148,33 @@ function BloomingLoadingText({ text = "AI is thinking..." }) {
         />
       </span>
     </div>
+  );
+}
+
+function StartCodingMessage({
+  message,
+  onStartCoding,
+}: {
+  message: string;
+  onStartCoding: () => void;
+}) {
+  const parts = message.split(new RegExp(`(${startCoding})`, "i"));
+
+  return (
+    <span>
+      {parts.map((part, idx) =>
+        part.toLowerCase() === startCoding.toLowerCase() ? (
+          <Button
+            key={idx}
+            onClick={onStartCoding}
+            className="mx-1 cursor-pointer"
+          >
+            {startCoding}
+          </Button>
+        ) : (
+          <ReactMarkdown key={idx}>{part}</ReactMarkdown>
+        ),
+      )}
+    </span>
   );
 }
