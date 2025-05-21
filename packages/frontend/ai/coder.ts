@@ -1,11 +1,10 @@
-"use server";
 import { AzureChatOpenAI } from "@langchain/openai";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { SystemMessage } from "@langchain/core/messages";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { coderInstructions } from "@/ai/instructions/coder";
 import { Message } from "@/app/page";
-import { tools } from "@/ai/tools";
+import { fileBuilderAgentLLM } from "@/ai/filebuilder";
 
 const coderLLM = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
@@ -24,11 +23,10 @@ const coderMemory = new MemorySaver();
 
 const coderPrompt = new SystemMessage(coderInstructions);
 
-const coderAgent = createReactAgent({
+export const coderAgent = createReactAgent({
   llm: coderLLM,
-  // https://js.langchain.com/docs/how_to/migrate_agent prompt templates. check
   prompt: coderPrompt,
-  tools: tools,
+  tools: [],
   checkpointSaver: coderMemory,
 });
 
@@ -36,15 +34,25 @@ const langGraphConfig = {
   thread_id: "test-thread",
 };
 
-export async function coderAgentLLM({ history }: { history: Message[] }) {
+export async function startCodeGeneration({ history }: { history: Message[] }) {
   const messages = history.map((message) => ({
     role: message.role,
     content: message.content,
   }));
-  return await coderAgent.stream(
+  const response = await coderAgent.invoke(
     {
       messages,
     },
-    { streamMode: "updates", configurable: langGraphConfig },
+    { configurable: langGraphConfig },
   );
+  console.log(
+    "last response",
+    response.messages[response.messages.length - 1].content,
+  );
+  const last_message = new HumanMessage({
+    name: "coder",
+    content: response.messages[response.messages.length - 1].content,
+  });
+
+  return fileBuilderAgentLLM({ last_message });
 }

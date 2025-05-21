@@ -43,24 +43,45 @@ const updateCodeRendererTool = tool(
     );
     let content = fs.readFileSync(filePath, "utf8");
 
-    // Add import statement if it doesn't already exist
-    const importStatement = `import ${componentName} from '@suggestions/${componentName}';\n`;
-    if (!content.includes(importStatement)) {
-      content = importStatement + content;
+    // 1. Add import if missing, inserting after the last import
+    const importStatement = `import ${componentName} from '@suggestions/${componentName}';`;
+    const importRegex = new RegExp(
+      `import\\s+${componentName}\\s+from\\s+['"]@suggestions/${componentName}['"];?`,
+    );
+    if (!importRegex.test(content)) {
+      // find all import statements
+      const importMatches = [...content.matchAll(/^import .+ from .+;$/gm)];
+      if (importMatches.length) {
+        const last = importMatches[importMatches.length - 1];
+        const insertPos = last.index! + last[0].length;
+        content =
+          content.slice(0, insertPos) +
+          "\n" +
+          importStatement +
+          content.slice(insertPos);
+      } else {
+        // no imports at all
+        content = importStatement + "\n\n" + content;
+      }
     }
 
-    // Replace the existing render logic with the new component
-    const renderRegex = /<[^>]+><\/[^>]+>/;
-    content = content.replace(renderRegex, `<${componentName} />`);
+    // 2. Replace inner contents of the first JSX fragment in the return
+    const fragmentRegex = /(return\s*\(\s*<>\s*)([\s\S]*?)(\s*<\/>\s*\);)/m;
+    if (!fragmentRegex.test(content)) {
+      throw new Error(
+        "Could not find a JSX fragment in the return of code-renderer.tsx",
+      );
+    }
+    content = content.replace(fragmentRegex, `$1<${componentName} />$3`);
 
-    // Write the updated content back to the file
+    // 3. Write back
     fs.writeFileSync(filePath, content, "utf8");
-
-    return `code-renderer.tsx updated to include ${componentName}.`;
+    return `code-renderer.tsx updated to render <${componentName} />.`;
   },
   {
     name: "update_code_renderer",
-    description: "Updates code-renderer.tsx to render the specified component.",
+    description:
+      "Updates code-renderer.tsx to render the specified component inside the first JSX fragment.",
     schema: z.object({
       componentName: z.string().describe("The name of the component to render"),
     }),

@@ -27,6 +27,6 @@ Ensuring alignment with best practices in modern frontend development.
 You only write code. You do not write any explanations or comments. You will never write anything else than code.
 Write full code, including imports and exports. No snippets.
 When you write the code for the user, always for the main function which gets exported use ALWAYS the following format:
-"export default function CodeRenderer() { ... code }" and not "export function ComponentName() {  ... code }" or similar.
+"export default function ComponentName() { ... code }" and not "export function ComponentName() {  ... code }" or similar.
 There should always be just one exported Component.
 `;

@@ -1,12 +1,12 @@
 import ReactMarkdown from "react-markdown";
 import { useForm } from "react-hook-form";
-import { Input } from "@headlessui/react";
 import { useEffect, useState } from "react";
 import { LLMType } from "@/ai/interface";
 import { Button } from "@/components/ui/button";
 import { startCoding } from "@/ai/instructions/architect";
 import useLLMChat from "@/hooks/use-llm-chat";
 import { Message } from "@/app/page";
+import { Textarea } from "@ui/textarea";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
@@ -91,19 +91,21 @@ export default function ChatArea({
         onSubmit={handleSubmit(onSubmit)}
         className="border-t border-gray-300 p-4"
       >
-        <Input
+        <Textarea
           {...register("message")}
-          type="text"
           placeholder="Type your message..."
           disabled={isDisabled}
           className="w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
         />
+        <Button type={"submit"}>Submit</Button>
       </form>
     </div>
   );
 }
 
-function BloomingLoadingText({ text = "Themify is thinking..." }) {
+export function BloomingLoadingText({
+  text = "Themify is generating code...",
+}) {
   return (
     <div className="prose prose-sm mt-3 mr-auto max-w-lg rounded-lg bg-gray-200 px-4 py-2 text-gray-900">
       <span>{text}</span>

@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { architectAgentLLM } from "@/ai/architect";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
-import { coderAgentLLM } from "@/ai/coder";
+import { startCodeGeneration } from "@/ai/coder";
 
 export async function POST(req: Request) {
   const { content, llmType, history } = await req.json();
   let stream;
   console.log("llmType", llmType);
   if (llmType === "coder") {
-    stream = await coderAgentLLM({ history });
+    stream = await startCodeGeneration({ history });
   }
   if (llmType === "architect") {
     stream = await architectAgentLLM({ content });

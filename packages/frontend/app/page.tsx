@@ -1,11 +1,11 @@
 "use client";
 
 import { ReactNode, useState } from "react";
-import ChatArea from "@/components/chat";
+import ChatArea, { BloomingLoadingText } from "@/components/chat";
 import { LLMType } from "@/ai/interface";
 import { ModeToggle } from "@/components/ui/toogle-dark-mode";
 import CodeRenderer from "@/components/code-renderer";
-import useLLMChat from "@/hooks/use-llm-chat";
+import { useLLMCoder } from "@/hooks/use-llm-chat";
 
 export type Message = {
   id: number;
@@ -35,9 +35,8 @@ export default function Home() {
     setMessages(updater);
   };
 
-  const { mutate, isPending: mutationIsPending } = useLLMChat({
+  const { mutate, isPending: mutationIsPending } = useLLMCoder({
     llmType,
-    setMessages,
     setCodeMessages,
   });
 
@@ -51,6 +50,7 @@ export default function Home() {
   };
 
   console.log(codeMessages);
+  console.log(mutationIsPending);
 
   return (
     <div className="flex h-screen w-full flex-row overflow-hidden">
@@ -73,12 +73,6 @@ export default function Home() {
         <FetchingIsInProcess isPending={mutationIsPending}>
           <CodeRenderer />
         </FetchingIsInProcess>
-        <button
-          onClick={() => switchLLMType(isArchitect ? "coder" : "architect")}
-          className="mt-4 rounded bg-blue-500 px-4 py-2 text-white"
-        >
-          Switch back
-        </button>
       </main>
     </div>
   );
@@ -92,9 +86,6 @@ function FetchingIsInProcess({
   isPending: boolean;
 }) {
   return (
-    <div>
-      {isPending && <div>Es roedelt </div>}
-      {children}
-    </div>
+    <div>{isPending ? <BloomingLoadingText /> : <div> {children}</div>}</div>
   );
 }

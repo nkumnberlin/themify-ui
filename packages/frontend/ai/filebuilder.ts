@@ -1,8 +1,8 @@
 import { AzureChatOpenAI } from "@langchain/openai";
-import { SystemMessage } from "@langchain/core/messages";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { Message } from "@/app/page";
 import { fileBuilderInstructions } from "@/ai/instructions/filebuilder";
+import { tools } from "@/ai/tools";
 
 const fileBuilderLLm = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
@@ -19,22 +19,25 @@ const fileBuilderLLm = new AzureChatOpenAI({
 
 const fileBuilderPrompt = new SystemMessage(fileBuilderInstructions);
 
-const fileBuilderAgent = createReactAgent({
+export const fileBuilderAgent = createReactAgent({
   llm: fileBuilderLLm,
-  // https://js.langchain.com/docs/how_to/migrate_agent prompt templates. check
   prompt: fileBuilderPrompt,
-  tools: [],
+  tools: tools,
 });
 
-export async function fileBuilderAgentLLM({ history }: { history: Message[] }) {
-  const messages = history.map((message) => ({
-    role: message.role,
-    content: message.content,
-  }));
+export async function fileBuilderAgentLLM({
+  last_message,
+}: {
+  last_message: HumanMessage;
+}) {
   return await fileBuilderAgent.stream(
     {
-      messages,
+      messages: last_message,
     },
     { streamMode: "updates" },
   );
 }
+
+//
+//   context of existing work
+// danach sprache
