@@ -31,6 +31,8 @@ const coderAgent = createReactAgent({
   checkpointSaver: coderMemory,
 });
 
+// use response with the next agent to create the files etc.
+
 const langGraphConfig = {
   thread_id: "test-thread",
 };

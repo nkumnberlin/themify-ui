@@ -4,7 +4,7 @@ import { ReactNode, useState } from "react";
 import ChatArea from "@/components/chat";
 import { LLMType } from "@/ai/interface";
 import { ModeToggle } from "@/components/ui/toogle-dark-mode";
-import { CodeRenderer } from "@/components/code-renderer";
+import CodeRenderer from "@/components/code-renderer";
 import useLLMChat from "@/hooks/use-llm-chat";
 
 export type Message = {
