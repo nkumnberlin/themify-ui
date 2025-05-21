@@ -7,6 +7,7 @@ import { startCoding } from "@/ai/instructions/architect";
 import useLLMChat from "@/hooks/use-llm-chat";
 import { Message } from "@/app/page";
 import { Textarea } from "@ui/textarea";
+import remarkBreaks from "remark-breaks";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
@@ -54,7 +55,6 @@ export default function ChatArea({
   const onStartCoding = () => {
     switchLLMType("coder");
   };
-
   return (
     <div className="flex h-full w-full flex-col">
       <div className="flex-1 space-y-2 overflow-y-auto p-4">
@@ -76,7 +76,11 @@ export default function ChatArea({
                     onStartCoding={onStartCoding}
                   />
                 ) : (
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <div className={msg.role === "user" ? "text-white" : ""}>
+                    <ReactMarkdown remarkPlugins={[remarkBreaks]}>
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
                 )}
               </div>
             </div>
@@ -96,8 +100,13 @@ export default function ChatArea({
           placeholder="Type your message..."
           disabled={isDisabled}
           className="w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(onSubmit)();
+            }
+          }}
         />
-        <Button type={"submit"}>Submit</Button>
       </form>
     </div>
   );

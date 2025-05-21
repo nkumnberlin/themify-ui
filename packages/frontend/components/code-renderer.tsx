@@ -1,11 +1,9 @@
-import InputDisplayComponent from '@suggestions/InputDisplayComponent';
-import TextLengthButton from '@suggestions/TextLengthButton';
-import BooksOfFaces from '@suggestions/BooksOfFaces';
-import SimpleInputDisplay from '@suggestions/SimpleInputDisplay';
+import BuildStuffedAnimal from '@suggestions/BuildStuffedAnimal';
+
 const CodeRenderer = () => {
   return (
     <>
-      <SimpleInputDisplay />
+      <BuildStuffedAnimal />
     </>
   );
 };
