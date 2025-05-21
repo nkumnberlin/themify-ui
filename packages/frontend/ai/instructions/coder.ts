@@ -29,9 +29,4 @@ Write full code, including imports and exports. No snippets.
 When you write the code for the user, always for the main function which gets exported use ALWAYS the following format:
 "export default function CodeRenderer() { ... code }" and not "export function ComponentName() {  ... code }" or similar.
 There should always be just one exported Component.
-
-Your tasks are:
-1. Generate a React component using the given libraries.
-2. Use the 'save_component' tool to save this component to './components/suggestions', ensuring the file exports only the component.
-3. Use the 'update_code_renderer' tool to update './components/code-renderer.tsx' to import and render the newly created component.
 `;

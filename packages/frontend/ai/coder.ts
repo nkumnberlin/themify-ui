@@ -5,6 +5,7 @@ import { SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { coderInstructions } from "@/ai/instructions/coder";
 import { Message } from "@/app/page";
+import { tools } from "@/ai/tools";
 
 const coderLLM = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
@@ -27,11 +28,9 @@ const coderAgent = createReactAgent({
   llm: coderLLM,
   // https://js.langchain.com/docs/how_to/migrate_agent prompt templates. check
   prompt: coderPrompt,
-  tools: [],
+  tools: tools,
   checkpointSaver: coderMemory,
 });
-
-// use response with the next agent to create the files etc.
 
 const langGraphConfig = {
   thread_id: "test-thread",
