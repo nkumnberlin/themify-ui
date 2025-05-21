@@ -2,69 +2,41 @@ import ReactMarkdown from "react-markdown";
 import { useForm } from "react-hook-form";
 import { Input } from "@headlessui/react";
 import { useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { decoderLLMStream } from "@/utils/decoderLLMStream";
 import { LLMType } from "@/ai/interface";
 import { Button } from "@/components/ui/button";
 import { startCoding } from "@/ai/instructions/architect";
-
-export type Message = {
-  id: number;
-  role: "user" | "ai";
-  content: string;
-  isLoading?: boolean;
-};
-
-const initialMessages: Message[] = [
-  {
-    id: 1,
-    role: "ai",
-    content:
-      "Hello! My name is Themify, how can I help you to build what you want today?",
-  },
-];
+import useLLMChat from "@/hooks/use-llm-chat";
+import { Message } from "@/app/page";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
   switchLLMType: (type: LLMType) => void;
+  messages: Message[];
+  setMessages: (updater: (prev: Message[]) => Message[]) => void;
 };
 
 export default function ChatArea({
   llmType,
   switchLLMType,
+  setMessages,
+  messages,
 }: ChatAreaProperties) {
   const { register, handleSubmit, reset, setFocus } = useForm<{
     message: string;
   }>();
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isDisabled, setIsDisabled] = useState(false);
 
-  const { mutate, isPending: architectIsPending } = useMutation({
-    mutationFn: async (message: string) => {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        body: JSON.stringify({ content: message, llmType }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      setIsDisabled(true);
-      if (!response.body) throw new Error("No response body");
-      console.log("has a body", response.body);
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let aiContent = "";
-      await decoderLLMStream({ reader, decoder, setMessages, aiContent });
-    },
-    onSuccess: () => {
-      setIsDisabled(false);
-      setFocus("message");
-    },
+  const { mutate, isPending: mutationIsPending } = useLLMChat({
+    setIsDisabled,
+    llmType,
+    setFocus,
+    setMessages,
   });
 
   useEffect(() => {
     setFocus("message");
   }, []);
+
   const onSubmit = ({ message }: { message: string }) => {
     if (!message.trim()) return;
 
@@ -74,32 +46,34 @@ export default function ChatArea({
       content: message,
     };
     setMessages((prev) => [...prev, userMessage]);
-    mutate(message);
+    mutate({ message, _llmType: "architect" });
 
     reset();
   };
 
-  console.log(messages);
+  const onStartCoding = () => {
+    switchLLMType("coder");
+  };
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="flex-1 space-y-2 overflow-y-auto p-4">
         {messages.map((msg) => (
           <span key={msg.id}>
             <div
-              className={`max-w-xs rounded-lg px-4 py-2 ${
+              className={`mt-3 max-w-lg rounded-lg px-4 py-2 ${
                 msg.role === "user"
                   ? "ml-auto bg-blue-500"
                   : "mr-auto bg-gray-200"
               }`}
             >
               <div className="prose prose-sm">
-                {msg.content.toLowerCase().includes("start coding") ? (
+                {msg.content
+                  .toLowerCase()
+                  .includes(startCoding.toLowerCase()) ? (
                   <StartCodingMessage
                     message={msg.content}
-                    onStartCoding={() => {
-                      switchLLMType("coder");
-                      console.log("Start coding message");
-                    }}
+                    onStartCoding={onStartCoding}
                   />
                 ) : (
                   <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -108,8 +82,8 @@ export default function ChatArea({
             </div>
           </span>
         ))}
-        {architectIsPending && (
-          <BloomingLoadingText text={"AI is thinking..."} />
+        {mutationIsPending && (
+          <BloomingLoadingText text={"Themify is thinking..."} />
         )}
       </div>
 
@@ -129,11 +103,11 @@ export default function ChatArea({
   );
 }
 
-function BloomingLoadingText({ text = "AI is thinking..." }) {
+function BloomingLoadingText({ text = "Themify is thinking..." }) {
   return (
-    <div className="mr-auto max-w-xs rounded-lg bg-gray-200 px-4 py-2 text-gray-900">
+    <div className="prose prose-sm mt-3 mr-auto max-w-lg rounded-lg bg-gray-200 px-4 py-2 text-gray-900">
       <span>{text}</span>
-      <span className="flex space-x-1">
+      <span className="ml-1 space-x-1">
         <span
           className="inline-block h-2 w-2 animate-bounce rounded-full bg-gray-400"
           style={{ animationDelay: "0s" }}
@@ -167,7 +141,7 @@ function StartCodingMessage({
           <Button
             key={idx}
             onClick={onStartCoding}
-            className="mx-1 cursor-pointer"
+            className="bg-background mx-1 cursor-pointer text-current"
           >
             {startCoding}
           </Button>

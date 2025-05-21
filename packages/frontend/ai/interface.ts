@@ -1,5 +1,11 @@
 export type LLMType = "coder" | "architect";
 
+export interface StructuredResponse {
+  structuredResponse: {
+    tsx: string;
+  };
+}
+
 export interface AgentData {
   agent: {
     messages: AgentMessage[];

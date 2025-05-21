@@ -1,20 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import ChatArea from "@/components/chat";
 import { LLMType } from "@/ai/interface";
 import { ModeToggle } from "@/components/ui/toogle-dark-mode";
-import CodeRenderer from "@/components/code-renderer";
+import { CodeRenderer } from "@/components/code-renderer";
+import useLLMChat from "@/hooks/use-llm-chat";
+
+export type Message = {
+  id: number;
+  role: "user" | "ai";
+  content: string;
+  isLoading?: boolean;
+};
+
+const initialMessages: Message[] = [
+  {
+    id: 1,
+    role: "ai",
+    content:
+      "Hello! My name is Themify, how can I help you to build what you want today?",
+  },
+];
 
 export default function Home() {
   const [llmType, setLlmType] = useState<LLMType>("architect");
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [codeMessages, setCodeMessages] = useState<Message[]>([]);
 
   const sidebarWidthClass = llmType === "architect" ? "w-full" : "w-1/3";
   const isArchitect = llmType === "architect";
 
+  const handleSetMessages = (updater: (prev: Message[]) => Message[]) => {
+    setMessages(updater);
+  };
+
+  const { mutate, isPending: mutationIsPending } = useLLMChat({
+    llmType,
+    setMessages,
+    setCodeMessages,
+  });
+
   const switchLLMType = (type: LLMType) => {
     setLlmType(type);
+    if (type === "architect") return;
+    mutate({
+      _llmType: type,
+      history: messages,
+    });
   };
+
+  console.log(codeMessages);
 
   return (
     <div className="flex h-screen w-full flex-row overflow-hidden">
@@ -22,14 +58,21 @@ export default function Home() {
       <aside
         className={`min-w-[300px] border-r border-gray-800 p-4 transition-[width] duration-500 ease-in-out ${sidebarWidthClass}`}
       >
-        <ChatArea llmType={llmType} switchLLMType={switchLLMType} />
+        <ChatArea
+          llmType={llmType}
+          switchLLMType={switchLLMType}
+          messages={messages}
+          setMessages={handleSetMessages}
+        />
       </aside>
       <main
         className={`flex-1 overflow-y-auto p-4 transition-opacity duration-500 ease-in-out ${
           isArchitect ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
-        <CodeRenderer />
+        <FetchingIsInProcess isPending={mutationIsPending}>
+          <CodeRenderer />
+        </FetchingIsInProcess>
         <button
           onClick={() => switchLLMType(isArchitect ? "coder" : "architect")}
           className="mt-4 rounded bg-blue-500 px-4 py-2 text-white"
@@ -37,6 +80,21 @@ export default function Home() {
           Switch back
         </button>
       </main>
+    </div>
+  );
+}
+
+function FetchingIsInProcess({
+  children,
+  isPending,
+}: {
+  children: ReactNode;
+  isPending: boolean;
+}) {
+  return (
+    <div>
+      {isPending && <div>Es roedelt </div>}
+      {children}
     </div>
   );
 }

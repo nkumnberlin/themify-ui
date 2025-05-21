@@ -4,10 +4,11 @@ import { IterableReadableStream } from "@langchain/core/utils/stream";
 import { coderAgentLLM } from "@/ai/coder";
 
 export async function POST(req: Request) {
-  const { content, llmType } = await req.json();
+  const { content, llmType, history } = await req.json();
   let stream;
+  console.log("llmType", llmType);
   if (llmType === "coder") {
-    stream = await coderAgentLLM({ content });
+    stream = await coderAgentLLM({ history });
   }
   if (llmType === "architect") {
     stream = await architectAgentLLM({ content });
