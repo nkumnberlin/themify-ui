@@ -6,6 +6,7 @@ import { LLMType } from "@/ai/interface";
 import { ModeToggle } from "@/components/ui/toogle-dark-mode";
 import CodeRenderer from "@/components/code-renderer";
 import { useLLMCoder } from "@/hooks/use-llm-chat";
+import { Button } from "@ui/button";
 
 export type Message = {
   id: number;
@@ -48,13 +49,32 @@ export default function Home() {
       history: messages,
     });
   };
-
+  console.log("llmType", llmType);
   console.log(codeMessages);
   console.log(mutationIsPending);
 
   return (
     <div className="flex h-screen w-full flex-row overflow-hidden">
-      <ModeToggle />
+      <div
+        className={
+          "absolute z-10 flex w-full flex-row justify-between px-1 pt-1"
+        }
+      >
+        <ModeToggle />
+        <Button
+          onClick={() => {
+            if (llmType === "coder") {
+              return setLlmType("architect");
+            }
+            setLlmType("coder");
+          }}
+        >
+          Switch to{" "}
+          {llmType === "coder"
+            ? "Architect to change code"
+            : "Coder to see the Results"}
+        </Button>
+      </div>
       <aside
         className={`min-w-[300px] border-r border-gray-800 p-4 transition-[width] duration-500 ease-in-out ${sidebarWidthClass}`}
       >
@@ -65,6 +85,7 @@ export default function Home() {
           setMessages={handleSetMessages}
         />
       </aside>
+
       <main
         className={`flex-1 overflow-y-auto p-4 transition-opacity duration-500 ease-in-out ${
           isArchitect ? "pointer-events-none opacity-0" : "opacity-100"

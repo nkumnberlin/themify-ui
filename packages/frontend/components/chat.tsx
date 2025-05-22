@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LLMType } from "@/ai/interface";
 import { Button } from "@/components/ui/button";
 import { startCoding } from "@/ai/instructions/architect";
@@ -26,7 +26,13 @@ export default function ChatArea({
     message: string;
   }>();
   const [isDisabled, setIsDisabled] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  console.log("chat", messages);
   const { mutate, isPending: mutationIsPending } = useLLMChat({
     setIsDisabled,
     llmType,
@@ -90,7 +96,7 @@ export default function ChatArea({
           <BloomingLoadingText text={"Themify is thinking..."} />
         )}
       </div>
-
+      <div ref={messagesEndRef} />
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="border-t border-gray-300 p-4"
@@ -98,7 +104,7 @@ export default function ChatArea({
         <Textarea
           {...register("message")}
           placeholder="Type your message..."
-          disabled={isDisabled}
+          disabled={isDisabled || llmType === "coder"}
           className="w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {

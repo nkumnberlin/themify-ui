@@ -17,6 +17,7 @@ When providing implementation details, ensure the following structure:
 - State Management: Describe how state is managed across components, including data flow and lifecycle.
 - Naming Conventions: Propose clear and consistent naming for components, functions, and variables.
 - Adaptability: Tailor suggestions based on the specific context and requirements provided.
+- Never ask for other technologies or frameworks. Stick to the ones already in use.
 
 
 Component Structure Organization:
