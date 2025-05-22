@@ -8,7 +8,7 @@ import LandingPage from '@suggestions/LandingPage';
 const CodeRenderer = () => {
   return (
     <>
-      <LandingPage />
+      <App />
     </>
   );
 };

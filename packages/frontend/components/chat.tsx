@@ -8,6 +8,9 @@ import useLLMChat from "@/hooks/use-llm-chat";
 import { Message } from "@/app/page";
 import { Textarea } from "@ui/textarea";
 import remarkBreaks from "remark-breaks";
+import { MicButton } from "@/components/mic-button";
+import { SendMessageButton } from "@/components/send-message-button";
+// import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
@@ -34,7 +37,7 @@ export default function ChatArea({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  console.log("chat", messages);
+  // const { isRecording, startRecording, stopRecording } = useAudioRecorder();
   const { mutate, isPending: mutationIsPending } = useLLMChat({
     setIsDisabled,
     llmType,
@@ -45,6 +48,14 @@ export default function ChatArea({
   useEffect(() => {
     setFocus("message");
   }, []);
+
+  // const handleMicClick = () => {
+  //   if (isRecording) {
+  //     stopRecording();
+  //   } else {
+  //     startRecording();
+  //   }
+  // };
 
   const onSubmit = ({ message }: { message: string }) => {
     if (!message.trim()) return;
@@ -69,6 +80,9 @@ export default function ChatArea({
   const onStartCoding = () => {
     switchLLMToStartCoding("coder");
   };
+
+  console.log("chat", messages);
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="flex-1 space-y-2 overflow-y-auto p-4">
@@ -109,18 +123,27 @@ export default function ChatArea({
         onSubmit={handleSubmit(onSubmit)}
         className="border-t border-gray-300 p-4"
       >
-        <Textarea
-          {...register("message")}
-          placeholder="Type your message..."
-          disabled={isDisabled}
-          className="w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit(onSubmit)();
-            }
-          }}
-        />
+        <div className="flex h-full">
+          <Textarea
+            {...register("message")}
+            placeholder="Type your message..."
+            disabled={isDisabled}
+            className="w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(onSubmit)();
+              }
+            }}
+          />
+          <div className="flex flex-col gap-2">
+            <SendMessageButton
+              disabled={isDisabled}
+              onClick={handleSubmit(onSubmit)}
+            />
+            <MicButton onClick={() => console.log("")} disabled={isDisabled} />
+          </div>
+        </div>
       </form>
     </div>
   );
