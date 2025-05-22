@@ -5,8 +5,12 @@ import ChatArea, { BloomingLoadingText } from "@/components/chat";
 import { LLMType } from "@/ai/interface";
 import { ModeToggle } from "@/components/ui/toogle-dark-mode";
 import CodeRenderer from "@/components/code-renderer";
-import { useLLMCoder } from "@/hooks/use-llm-chat";
+import { useLLMCoder, useUserFeedbackCoder } from "@/hooks/use-llm-chat";
 import { Button } from "@ui/button";
+
+export type AddUserFeedbackToCode = {
+  message: string;
+};
 
 export type Message = {
   id: number;
@@ -41,17 +45,41 @@ export default function Home() {
     setCodeMessages,
   });
 
+  const { mutate: mutateFeedback, isPending: feedbackMutationIsPending } =
+    useUserFeedbackCoder({
+      llmType,
+      setCodeMessages,
+      setMessages,
+    });
+
   const switchLLMType = (type: LLMType) => {
-    setLlmType(type);
     if (type === "architect") return;
+    setLlmType(type);
     mutate({
       _llmType: type,
       history: messages,
     });
   };
+
   console.log("llmType", llmType);
-  console.log(codeMessages);
-  console.log(mutationIsPending);
+  console.log("code", codeMessages);
+  console.log(mutationIsPending || feedbackMutationIsPending);
+
+  const addUserFeedbackToCode = ({ message }: AddUserFeedbackToCode) => {
+    const userMessage: Message = {
+      id: Date.now(),
+      role: "user",
+      content: message,
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    mutateFeedback({
+      _llmType: "coder",
+      feedback: {
+        message,
+        code: codeMessages,
+      },
+    });
+  };
 
   return (
     <div className="flex h-screen w-full flex-row overflow-hidden">
@@ -71,7 +99,7 @@ export default function Home() {
         >
           Switch to{" "}
           {llmType === "coder"
-            ? "Architect to change code"
+            ? "Architect to create a new project"
             : "Coder to see the Results"}
         </Button>
       </div>
@@ -80,9 +108,10 @@ export default function Home() {
       >
         <ChatArea
           llmType={llmType}
-          switchLLMType={switchLLMType}
+          switchLLMToStartCoding={switchLLMType}
           messages={messages}
           setMessages={handleSetMessages}
+          addUserFeedbackToCode={addUserFeedbackToCode}
         />
       </aside>
 
@@ -91,7 +120,9 @@ export default function Home() {
           isArchitect ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
-        <FetchingIsInProcess isPending={mutationIsPending}>
+        <FetchingIsInProcess
+          isPending={mutationIsPending || feedbackMutationIsPending}
+        >
           <CodeRenderer />
         </FetchingIsInProcess>
       </main>

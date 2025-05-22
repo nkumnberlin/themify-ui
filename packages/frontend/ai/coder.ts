@@ -5,6 +5,7 @@ import { MemorySaver } from "@langchain/langgraph";
 import { coderInstructions } from "@/ai/instructions/coder";
 import { Message } from "@/app/page";
 import { fileBuilderAgentLLM } from "@/ai/filebuilder";
+import { Feedback } from "@/ai/interface";
 
 const coderLLM = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
@@ -34,11 +35,11 @@ const langGraphConfig = {
   thread_id: "test-thread",
 };
 
-export async function startCodeGeneration({ history }: { history: Message[] }) {
-  const messages = history.map((message) => ({
-    role: message.role,
-    content: message.content,
-  }));
+async function codeGenerator({
+  messages,
+}: {
+  messages: { role: string; content: string }[];
+}) {
   const response = await coderAgent.invoke(
     {
       messages,
@@ -53,6 +54,30 @@ export async function startCodeGeneration({ history }: { history: Message[] }) {
     name: "coder",
     content: response.messages[response.messages.length - 1].content,
   });
+  await fileBuilderAgentLLM({ last_message });
+  return response;
+}
 
-  return fileBuilderAgentLLM({ last_message });
+export async function startCodeGeneration({ history }: { history: Message[] }) {
+  const messages = history.map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
+  return await codeGenerator({ messages });
+}
+
+export async function addUserFeedbackToCodeGenerated({
+  feedback,
+}: {
+  feedback: Feedback;
+}) {
+  const { code, message } = feedback;
+  const messages = [
+    {
+      role: "user",
+      content: message,
+    },
+    ...code,
+  ];
+  return await codeGenerator({ messages });
 }

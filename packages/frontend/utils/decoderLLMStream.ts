@@ -37,6 +37,7 @@ export async function decoderLLMStream({
   ]);
   let buffer = "";
   const { done, value } = await reader.read();
+  if (done) return;
   buffer += decoder.decode(value, { stream: true });
   const lines = buffer.split("\n");
   for (const line of lines) {
@@ -44,7 +45,11 @@ export async function decoderLLMStream({
     try {
       let parsed = JSON.parse(line);
       parsed = parsed as AgentData;
-      for (const message of parsed.agent.messages) {
+      console.log("before the rror", parsed);
+      if (!parsed?.agent?.messages) {
+        return;
+      }
+      for (const message of parsed?.agent?.messages) {
         const content = message.kwargs.content ?? "";
         if (content) {
           aiContent += content;

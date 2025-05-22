@@ -30,12 +30,9 @@ export async function fileBuilderAgentLLM({
 }: {
   last_message: HumanMessage;
 }) {
-  return await fileBuilderAgent.stream(
-    {
-      messages: last_message,
-    },
-    { streamMode: "updates" },
-  );
+  return await fileBuilderAgent.invoke({
+    messages: last_message,
+  });
 }
 
 //

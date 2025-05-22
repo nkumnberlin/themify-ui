@@ -11,16 +11,18 @@ import remarkBreaks from "remark-breaks";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
-  switchLLMType: (type: LLMType) => void;
+  switchLLMToStartCoding: (type: LLMType) => void;
   messages: Message[];
   setMessages: (updater: (prev: Message[]) => Message[]) => void;
+  addUserFeedbackToCode: ({ message }: { message: string }) => void;
 };
 
 export default function ChatArea({
   llmType,
-  switchLLMType,
+  switchLLMToStartCoding,
   setMessages,
   messages,
+  addUserFeedbackToCode,
 }: ChatAreaProperties) {
   const { register, handleSubmit, reset, setFocus } = useForm<{
     message: string;
@@ -46,12 +48,18 @@ export default function ChatArea({
 
   const onSubmit = ({ message }: { message: string }) => {
     if (!message.trim()) return;
-
     const userMessage: Message = {
       id: Date.now(),
       role: "user",
       content: message,
     };
+
+    if (llmType === "coder") {
+      addUserFeedbackToCode({ message });
+      reset();
+      return;
+    }
+
     setMessages((prev) => [...prev, userMessage]);
     mutate({ message, _llmType: "architect" });
 
@@ -59,7 +67,7 @@ export default function ChatArea({
   };
 
   const onStartCoding = () => {
-    switchLLMType("coder");
+    switchLLMToStartCoding("coder");
   };
   return (
     <div className="flex h-full w-full flex-col">
@@ -104,7 +112,7 @@ export default function ChatArea({
         <Textarea
           {...register("message")}
           placeholder="Type your message..."
-          disabled={isDisabled || llmType === "coder"}
+          disabled={isDisabled}
           className="w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {

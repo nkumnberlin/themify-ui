@@ -1,29 +1,45 @@
 import { NextResponse } from "next/server";
 import { architectAgentLLM } from "@/ai/architect";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
-import { startCodeGeneration } from "@/ai/coder";
+import {
+  addUserFeedbackToCodeGenerated,
+  startCodeGeneration,
+} from "@/ai/coder";
 
 export async function POST(req: Request) {
-  const { content, llmType, history } = await req.json();
-  let stream;
-  console.log("llmType", llmType);
-  if (llmType === "coder") {
+  const { content, llmType, history, feedback } = await req.json();
+  if (llmType === "architect" && content) {
+    const stream = await architectAgentLLM({ content });
+    const readableStream = streamIterableReadAbleStream(stream);
+
+    return new NextResponse(readableStream, {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+      },
+    });
+  }
+  let stream = undefined;
+  if (llmType === "coder" && history) {
     stream = await startCodeGeneration({ history });
   }
-  if (llmType === "architect") {
-    stream = await architectAgentLLM({ content });
+  if (llmType === "coder" && feedback) {
+    stream = await addUserFeedbackToCodeGenerated({ feedback });
   }
   if (!stream) {
     return null;
   }
-
-  const readableStream = streamIterableReadAbleStream(stream);
-
-  return new NextResponse(readableStream, {
+  const lastMessage = JSON.stringify(
+    stream.messages[stream.messages.length - 1].content,
+  );
+  if (!lastMessage) {
+    return null;
+  }
+  return new NextResponse(lastMessage, {
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
     },
   });
 }

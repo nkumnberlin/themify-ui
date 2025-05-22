@@ -1,7 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
-import { LLMType } from "@/ai/interface";
+import { Feedback, LLMType } from "@/ai/interface";
 import { decoderLLMStream } from "@/utils/decoderLLMStream";
 import { Message } from "@/app/page";
+import { decoderLLMInvoke } from "@/utils/decoderLLMInvoke";
 
 export type UseLMChat = {
   setIsDisabled?: (val: boolean) => void;
@@ -77,14 +78,42 @@ export function useLLMCoder({ llmType, setCodeMessages }: LLMCoderProps) {
       });
       if (!response.body) throw new Error("No response body");
       const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let aiContent = "";
-      await decoderLLMStream({
-        reader,
-        decoder,
-        setCodeMessages,
-        aiContent,
-        llmType,
+      await decoderLLMInvoke({ reader, setCodeMessages });
+    },
+  });
+}
+
+type AddUserFeedback = {
+  _llmType: LLMType;
+  feedback: Feedback;
+};
+
+type UserFeedbackCoderProps = {
+  llmType: LLMType;
+  setCodeMessages: (updater: (prev: Message[]) => Message[]) => void;
+  setMessages: (updater: (prev: Message[]) => Message[]) => void;
+};
+
+export function useUserFeedbackCoder({
+  setCodeMessages,
+  setMessages,
+}: UserFeedbackCoderProps) {
+  return useMutation({
+    mutationFn: async ({ _llmType, feedback }: AddUserFeedback) => {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        body: JSON.stringify({ llmType: _llmType, feedback }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.body) throw new Error("No response body");
+      const reader = response.body.getReader();
+      await decoderLLMInvoke({ reader, setCodeMessages }).finally(() => {
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now(), role: "ai", content: "Code has been updated!" },
+        ]);
       });
     },
   });

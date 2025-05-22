@@ -1,3 +1,5 @@
+import { Message } from "@/app/page";
+
 export type LLMType = "coder" | "architect";
 
 export interface StructuredResponse {
@@ -5,6 +7,10 @@ export interface StructuredResponse {
     tsx: string;
   };
 }
+export type Feedback = {
+  message: string;
+  code: Message[];
+};
 
 export interface AgentData {
   agent: {
