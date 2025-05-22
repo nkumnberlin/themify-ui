@@ -10,6 +10,7 @@ import { Textarea } from "@ui/textarea";
 import remarkBreaks from "remark-breaks";
 import { MicButton } from "@/components/mic-button";
 import { SendMessageButton } from "@/components/send-message-button";
+import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 // import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 
 export type ChatAreaProperties = {
@@ -20,6 +21,10 @@ export type ChatAreaProperties = {
   addUserFeedbackToCode: ({ message }: { message: string }) => void;
 };
 
+export type Form = {
+  message: string;
+};
+
 export default function ChatArea({
   llmType,
   switchLLMToStartCoding,
@@ -27,9 +32,16 @@ export default function ChatArea({
   messages,
   addUserFeedbackToCode,
 }: ChatAreaProperties) {
-  const { register, handleSubmit, reset, setFocus } = useForm<{
-    message: string;
-  }>();
+  const { register, handleSubmit, reset, setFocus, setValue } = useForm<Form>();
+  const {
+    isRecording,
+    startRecording,
+    stopRecording,
+    isPending: audioTranscriptIsPending,
+  } = useAudioRecorder({
+    setValue,
+  });
+
   const [isDisabled, setIsDisabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +49,6 @@ export default function ChatArea({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // const { isRecording, startRecording, stopRecording } = useAudioRecorder();
   const { mutate, isPending: mutationIsPending } = useLLMChat({
     setIsDisabled,
     llmType,
@@ -48,14 +59,14 @@ export default function ChatArea({
   useEffect(() => {
     setFocus("message");
   }, []);
-
-  // const handleMicClick = () => {
-  //   if (isRecording) {
-  //     stopRecording();
-  //   } else {
-  //     startRecording();
-  //   }
-  // };
+  console.log("is recording", isRecording);
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   const onSubmit = ({ message }: { message: string }) => {
     if (!message.trim()) return;
@@ -82,6 +93,9 @@ export default function ChatArea({
   };
 
   console.log("chat", messages);
+
+  const isFieldDisabled =
+    mutationIsPending || audioTranscriptIsPending || isDisabled;
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -127,7 +141,7 @@ export default function ChatArea({
           <Textarea
             {...register("message")}
             placeholder="Type your message..."
-            disabled={isDisabled}
+            disabled={isFieldDisabled}
             className="w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -138,10 +152,14 @@ export default function ChatArea({
           />
           <div className="flex flex-col gap-2">
             <SendMessageButton
-              disabled={isDisabled}
+              disabled={isFieldDisabled}
               onClick={handleSubmit(onSubmit)}
             />
-            <MicButton onClick={() => console.log("")} disabled={isDisabled} />
+            <MicButton
+              onClick={handleMicClick}
+              isRecording={isRecording}
+              disabled={isFieldDisabled}
+            />
           </div>
         </div>
       </form>

@@ -1,15 +1,14 @@
+"use server";
 import { InferenceClient } from "@huggingface/inference";
-import fs from "fs";
 
-const client = new InferenceClient("hf_xxxxxxxxxxxxxxxxxxxxxxxx");
+const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY!);
 
-const data = fs.readFileSync("sample1.flac");
-
-export async function speechToText() {
+export async function speechToText({ file }: { file: File }) {
   const output = await client.automaticSpeechRecognition({
-    data,
+    data: file,
     model: "openai/whisper-large-v3",
-    provider: "fal-ai",
+    provider: "hf-inference",
   });
   console.log(output);
+  return output;
 }
