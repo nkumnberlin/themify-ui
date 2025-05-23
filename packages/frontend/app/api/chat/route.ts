@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
-import { architectAgentLLM } from "@/ai/architect";
+import { architectAgentLLM } from "@/ai/agents/architect";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import {
+  addGranularFeedbackToCodeGenerated,
   addUserFeedbackToCodeGenerated,
   startCodeGeneration,
-} from "@/ai/coder";
+} from "@/ai/agents/coder";
 
 export async function POST(req: Request) {
-  const { content, llmType, history, feedback } = await req.json();
+  const { content, llmType, history, feedback, granularFeedback } =
+    await req.json();
   if (llmType === "architect" && content) {
     const stream = await architectAgentLLM({ content });
     const readableStream = streamIterableReadAbleStream(stream);
@@ -23,6 +25,9 @@ export async function POST(req: Request) {
   let stream = undefined;
   if (llmType === "coder" && history) {
     stream = await startCodeGeneration({ history });
+  }
+  if (llmType === "coder" && granularFeedback) {
+    stream = await addGranularFeedbackToCodeGenerated({ granularFeedback });
   }
   if (llmType === "coder" && feedback) {
     stream = await addUserFeedbackToCodeGenerated({ feedback });

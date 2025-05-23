@@ -9,7 +9,13 @@ export interface StructuredResponse {
 }
 export type Feedback = {
   message: string;
-  code: Message[];
+  code: Message;
+};
+
+export type GranularFeedback = {
+  message: string;
+  code: Message;
+  codeSnippet: string;
 };
 
 export interface AgentData {

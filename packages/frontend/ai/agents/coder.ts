@@ -4,8 +4,9 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { coderInstructions } from "@/ai/instructions/coder";
 import { Message } from "@/app/page";
-import { fileBuilderAgentLLM } from "@/ai/filebuilder";
-import { Feedback } from "@/ai/interface";
+import { fileBuilderAgentLLM } from "@/ai/agents/filebuilder";
+import { Feedback, GranularFeedback } from "@/ai/interface";
+import { feedbackCoderInstructions } from "@/ai/instructions/feedbackCoder";
 
 const coderLLM = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
@@ -21,14 +22,23 @@ const coderLLM = new AzureChatOpenAI({
 });
 
 const coderMemory = new MemorySaver();
+const feedbackCoderMemory = new MemorySaver();
 
 const coderPrompt = new SystemMessage(coderInstructions);
+const coderFeedbackPrompt = new SystemMessage(feedbackCoderInstructions);
 
 export const coderAgent = createReactAgent({
   llm: coderLLM,
   prompt: coderPrompt,
   tools: [],
   checkpointSaver: coderMemory,
+});
+
+export const coderFeedbackAgent = createReactAgent({
+  llm: coderLLM,
+  prompt: coderFeedbackPrompt,
+  tools: [],
+  checkpointSaver: feedbackCoderMemory,
 });
 
 const langGraphConfig = {
@@ -46,9 +56,24 @@ async function codeGenerator({
     },
     { configurable: langGraphConfig },
   );
-  console.log(
-    "last response",
-    response.messages[response.messages.length - 1].content,
+  const last_message = new HumanMessage({
+    name: "coder",
+    content: response.messages[response.messages.length - 1].content,
+  });
+  await fileBuilderAgentLLM({ last_message });
+  return response;
+}
+
+async function feedbackCodeGenerator({
+  messages,
+}: {
+  messages: { role: string; content: string }[];
+}) {
+  const response = await coderFeedbackAgent.invoke(
+    {
+      messages,
+    },
+    { configurable: langGraphConfig },
   );
   const last_message = new HumanMessage({
     name: "coder",
@@ -77,7 +102,43 @@ export async function addUserFeedbackToCodeGenerated({
       role: "user",
       content: message,
     },
-    ...code,
+    {
+      role: "user",
+      content: "The next Message is the entire component Code.",
+    },
+    code,
   ];
-  return await codeGenerator({ messages });
+  console.log("message sent", messages);
+
+  return await feedbackCodeGenerator({ messages });
+}
+
+export async function addGranularFeedbackToCodeGenerated({
+  granularFeedback,
+}: {
+  granularFeedback: GranularFeedback;
+}) {
+  const { code, message, codeSnippet } = granularFeedback;
+  const messages = [
+    {
+      role: "user",
+      content: message,
+    },
+    {
+      role: "user",
+      content: "The next Message is the code snippet.",
+    },
+    {
+      role: "user",
+      content: codeSnippet,
+    },
+    {
+      role: "user",
+      content: "The next Message is the entire component Code.",
+    },
+    code,
+  ];
+
+  console.log("message sent", messages);
+  return await feedbackCodeGenerator({ messages });
 }

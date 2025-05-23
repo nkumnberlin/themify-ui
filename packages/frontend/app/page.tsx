@@ -5,8 +5,13 @@ import ChatArea, { BloomingLoadingText } from "@/components/chat";
 import { LLMType } from "@/ai/interface";
 import { ModeToggle } from "@/components/ui/toogle-dark-mode";
 import CodeRenderer from "@/components/code-renderer";
-import { useLLMCoder, useUserFeedbackCoder } from "@/hooks/use-llm-chat";
+import {
+  useAddGranularUserFeedbackCoder,
+  useLLMCoder,
+  useUserFeedbackCoder,
+} from "@/hooks/use-llm-chat";
 import { Button } from "@ui/button";
+import InjectHtmlToCursor from "@/components/inject-html-to-cursor";
 
 export type AddUserFeedbackToCode = {
   message: string;
@@ -32,6 +37,9 @@ export default function Home() {
   const [llmType, setLlmType] = useState<LLMType>("architect");
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [codeMessages, setCodeMessages] = useState<Message[]>([]);
+  const [granularUserFeedback, setGranularUserFeedback] = useState<Message[]>(
+    [],
+  );
 
   const sidebarWidthClass = llmType === "architect" ? "w-full" : "w-1/3";
   const isArchitect = llmType === "architect";
@@ -51,6 +59,14 @@ export default function Home() {
       setCodeMessages,
       setMessages,
     });
+  const {
+    mutate: mutateGranularFeedback,
+    isPending: granularFeedbackMutationIsPending,
+  } = useAddGranularUserFeedbackCoder({
+    llmType,
+    setCodeMessages,
+    setMessages,
+  });
 
   const switchLLMType = (type: LLMType) => {
     if (type === "architect") return;
@@ -59,6 +75,37 @@ export default function Home() {
       _llmType: type,
       history: messages,
     });
+  };
+
+  const handleGranularUserFeedback = ({
+    message,
+    codeSnippet,
+  }: {
+    message: string;
+    codeSnippet: string;
+  }) => {
+    const userMessage: Message = {
+      id: Date.now(),
+      role: "user",
+      content: message,
+    };
+    setGranularUserFeedback((prev) => [...prev, userMessage]);
+    mutateGranularFeedback({
+      _llmType: "coder",
+      granularFeedback: {
+        message,
+        code: codeMessages[codeMessages.length - 1],
+        codeSnippet,
+      },
+    });
+    // mutateFeedback({
+    //   _llmType: "coder",
+    //   feedback: {
+    //     message,
+    //     code: codeMessages,
+    //   },
+    // });
+    console.log(userMessage, codeSnippet);
   };
 
   console.log("llmType", llmType);
@@ -76,10 +123,15 @@ export default function Home() {
       _llmType: "coder",
       feedback: {
         message,
-        code: codeMessages,
+        code: codeMessages[codeMessages.length - 1],
       },
     });
   };
+
+  const isARequestPending =
+    granularFeedbackMutationIsPending ||
+    mutationIsPending ||
+    feedbackMutationIsPending;
 
   return (
     <div className="flex h-screen w-full flex-row overflow-hidden">
@@ -121,10 +173,16 @@ export default function Home() {
         }`}
       >
         <FetchingIsInProcess
-          isPending={mutationIsPending || feedbackMutationIsPending}
+          isPending={isARequestPending}
           codeMessages={codeMessages}
         >
-          <CodeRenderer />
+          <div>
+            <InjectHtmlToCursor
+              handleGranularUserFeedback={handleGranularUserFeedback}
+            >
+              <CodeRenderer />
+            </InjectHtmlToCursor>
+          </div>
         </FetchingIsInProcess>
       </main>
     </div>

@@ -1,6 +1,6 @@
 import { Message } from "@/app/page";
 
-type DecoderLLMInvoke = {
+type DecoderLlmInvoke = {
   setCodeMessages: (updater: (prev: Message[]) => Message[]) => void;
   reader: ReadableStreamDefaultReader<Uint8Array>;
 };
@@ -8,7 +8,7 @@ type DecoderLLMInvoke = {
 export async function decoderLLMInvoke({
   reader,
   setCodeMessages,
-}: DecoderLLMInvoke) {
+}: DecoderLlmInvoke) {
   const decoder = new TextDecoder();
   const { done, value } = await reader.read();
   if (done) return;

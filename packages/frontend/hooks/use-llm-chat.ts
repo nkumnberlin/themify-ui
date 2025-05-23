@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
-import { Feedback, LLMType } from "@/ai/interface";
-import { decoderLLMStream } from "@/utils/decoderLLMStream";
+import { Feedback, GranularFeedback, LLMType } from "@/ai/interface";
+import { decoderLLMStream } from "@/utils/decoder-llm-stream";
 import { Message } from "@/app/page";
-import { decoderLLMInvoke } from "@/utils/decoderLLMInvoke";
+import { decoderLLMInvoke } from "@/utils/decoder-llm-invoke";
 
 export type UseLMChat = {
   setIsDisabled?: (val: boolean) => void;
@@ -103,6 +103,45 @@ export function useUserFeedbackCoder({
       const response = await fetch("/api/chat", {
         method: "POST",
         body: JSON.stringify({ llmType: _llmType, feedback }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.body) throw new Error("No response body");
+      const reader = response.body.getReader();
+      await decoderLLMInvoke({ reader, setCodeMessages }).finally(() => {
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now(), role: "ai", content: "Code has been updated!" },
+        ]);
+      });
+    },
+  });
+}
+
+type AddGranularUserFeedback = {
+  _llmType: LLMType;
+  granularFeedback: GranularFeedback;
+};
+
+type AddGranularUserFeedbackCoderProps = {
+  llmType: LLMType;
+  setCodeMessages: (updater: (prev: Message[]) => Message[]) => void;
+  setMessages: (updater: (prev: Message[]) => Message[]) => void;
+};
+
+export function useAddGranularUserFeedbackCoder({
+  setCodeMessages,
+  setMessages,
+}: AddGranularUserFeedbackCoderProps) {
+  return useMutation({
+    mutationFn: async ({
+      _llmType,
+      granularFeedback,
+    }: AddGranularUserFeedback) => {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        body: JSON.stringify({ llmType: _llmType, granularFeedback }),
         headers: {
           "Content-Type": "application/json",
         },

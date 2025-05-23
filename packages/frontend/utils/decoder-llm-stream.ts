@@ -1,7 +1,7 @@
 import { Message } from "@/app/page";
 import { AgentData, LLMType } from "@/ai/interface";
 
-type DecoderLLMStream = {
+type DecoderLlmStream = {
   setMessages?: (updater: (prev: Message[]) => Message[]) => void;
   setCodeMessages?: (updater: (prev: Message[]) => Message[]) => void;
   reader: ReadableStreamDefaultReader<Uint8Array>;
@@ -17,7 +17,7 @@ export async function decoderLLMStream({
   decoder,
   llmType,
   aiContent,
-}: DecoderLLMStream) {
+}: DecoderLlmStream) {
   let messageSetter = setMessages;
   if (llmType === "coder") {
     messageSetter = setCodeMessages;
