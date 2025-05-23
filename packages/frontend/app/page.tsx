@@ -122,6 +122,7 @@ export default function Home() {
       >
         <FetchingIsInProcess
           isPending={mutationIsPending || feedbackMutationIsPending}
+          codeMessages={codeMessages}
         >
           <CodeRenderer />
         </FetchingIsInProcess>
@@ -132,12 +133,25 @@ export default function Home() {
 
 function FetchingIsInProcess({
   children,
+  codeMessages,
   isPending,
 }: {
   children: ReactNode;
+  codeMessages: Message[];
   isPending: boolean;
 }) {
   return (
-    <div>{isPending ? <BloomingLoadingText /> : <div> {children}</div>}</div>
+    <div>
+      {isPending && codeMessages.length === 0 && <BloomingLoadingText />}
+
+      {isPending && codeMessages.length > 0 ? (
+        <div>
+          <BloomingLoadingText />
+          {children}
+        </div>
+      ) : (
+        <div>{children}</div>
+      )}
+    </div>
   );
 }
