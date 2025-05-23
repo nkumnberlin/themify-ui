@@ -191,7 +191,6 @@ export default function Home() {
 
 function FetchingIsInProcess({
   children,
-  codeMessages,
   isPending,
 }: {
   children: ReactNode;
@@ -199,17 +198,16 @@ function FetchingIsInProcess({
   isPending: boolean;
 }) {
   return (
-    <div>
-      {isPending && codeMessages.length === 0 && <BloomingLoadingText />}
-
-      {isPending && codeMessages.length > 0 ? (
-        <div>
+    <div className="relative">
+      {isPending && (
+        <div className="absolute inset-0 z-10 m-auto flex items-center justify-center bg-white/80">
           <BloomingLoadingText />
-          {children}
         </div>
-      ) : (
-        <div>{children}</div>
       )}
+
+      <div className={isPending ? "pointer-events-none opacity-50" : ""}>
+        {children}
+      </div>
     </div>
   );
 }

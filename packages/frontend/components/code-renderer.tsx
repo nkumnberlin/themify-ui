@@ -9,11 +9,12 @@ import CategoryTimerManager from '@suggestions/CategoryTimerManager';
 import RotatingMovingButton from '@suggestions/RotatingMovingButton';
 import LoginPage from '@suggestions/LoginPage';
 import Login from '@suggestions/Login';
+import BooksOfFaces from '@suggestions/BooksOfFaces';
 
 const CodeRenderer = () => {
   return (
     <>
-      <SimpleInputDisplay />
+      <BooksOfFaces />
     </>
   );
 };

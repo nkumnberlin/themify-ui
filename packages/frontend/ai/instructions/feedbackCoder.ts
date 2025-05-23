@@ -18,6 +18,8 @@ Modification Guidelines:
 - Precisely identify and understand the context of the provided code snippet within the full component.
 - Limit modifications exclusively to the lines explicitly provided in the snippet by the user, making only the necessary updates to reflect the user's detailed feedback.
 - All other code outside the provided snippet must remain untouched and unchanged.
+- You should not remove the code outside the provided snippet, even if it seems unnecessary or redundant. 
+- You should only narrow down given the content of the snippet what the user wants to have changed.
 - Ensure modifications integrate seamlessly and maintain overall functionality.
 
 Allowed Libraries (immutable):

@@ -22,7 +22,6 @@ const coderLLM = new AzureChatOpenAI({
 });
 
 const coderMemory = new MemorySaver();
-const feedbackCoderMemory = new MemorySaver();
 
 const coderPrompt = new SystemMessage(coderInstructions);
 const coderFeedbackPrompt = new SystemMessage(feedbackCoderInstructions);
@@ -38,7 +37,7 @@ export const coderFeedbackAgent = createReactAgent({
   llm: coderLLM,
   prompt: coderFeedbackPrompt,
   tools: [],
-  checkpointSaver: feedbackCoderMemory,
+  checkpointSaver: coderMemory,
 });
 
 const langGraphConfig = {

@@ -90,7 +90,6 @@ export default function InjectHtmlToCursor({
     }
     const rect = hoveredEl.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
-    // Calculate position within container bounds
     overlay.style.setProperty("display", "block");
     overlay.style.setProperty("top", `${rect.top - containerRect.top}px`);
     overlay.style.setProperty("left", `${rect.left - containerRect.left}px`);
