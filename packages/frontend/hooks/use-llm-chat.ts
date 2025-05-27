@@ -2,7 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import { Feedback, GranularFeedback, LLMType } from "@/ai/interface";
 import { decoderLLMStream } from "@/utils/decoder-llm-stream";
 import { Message } from "@/app/page";
-import { decoderLLMInvoke } from "@/utils/decoder-llm-invoke";
+import { decoderLLMInvokeCodeMessages } from "@/utils/decoder-llm-invoke-code-messages";
+import { routes } from "@/app/routes";
 
 export type UseLMChat = {
   setIsDisabled?: (val: boolean) => void;
@@ -25,7 +26,7 @@ export default function useLLMChat({
       message: string;
       _llmType: LLMType;
     }) => {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(routes.chat, {
         method: "POST",
         body: JSON.stringify({ content: message, llmType: _llmType }),
         headers: {
@@ -69,7 +70,7 @@ export function useLLMCoder({ llmType, setCodeMessages }: LLMCoderProps) {
       _llmType: LLMType;
       history?: Message[];
     }) => {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(routes.chat, {
         method: "POST",
         body: JSON.stringify({ llmType: _llmType, history }),
         headers: {
@@ -78,7 +79,7 @@ export function useLLMCoder({ llmType, setCodeMessages }: LLMCoderProps) {
       });
       if (!response.body) throw new Error("No response body");
       const reader = response.body.getReader();
-      await decoderLLMInvoke({ reader, setCodeMessages });
+      await decoderLLMInvokeCodeMessages({ reader, setCodeMessages });
     },
   });
 }
@@ -100,7 +101,7 @@ export function useUserFeedbackCoder({
 }: UserFeedbackCoderProps) {
   return useMutation({
     mutationFn: async ({ _llmType, feedback }: AddUserFeedback) => {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(routes.chat, {
         method: "POST",
         body: JSON.stringify({ llmType: _llmType, feedback }),
         headers: {
@@ -109,12 +110,14 @@ export function useUserFeedbackCoder({
       });
       if (!response.body) throw new Error("No response body");
       const reader = response.body.getReader();
-      await decoderLLMInvoke({ reader, setCodeMessages }).finally(() => {
-        setMessages((prev) => [
-          ...prev,
-          { id: Date.now(), role: "ai", content: "Code has been updated!" },
-        ]);
-      });
+      await decoderLLMInvokeCodeMessages({ reader, setCodeMessages }).finally(
+        () => {
+          setMessages((prev) => [
+            ...prev,
+            { id: Date.now(), role: "ai", content: "Code has been updated!" },
+          ]);
+        },
+      );
     },
   });
 }
@@ -139,7 +142,7 @@ export function useAddGranularUserFeedbackCoder({
       _llmType,
       granularFeedback,
     }: AddGranularUserFeedback) => {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(routes.chat, {
         method: "POST",
         body: JSON.stringify({ llmType: _llmType, granularFeedback }),
         headers: {
@@ -148,12 +151,14 @@ export function useAddGranularUserFeedbackCoder({
       });
       if (!response.body) throw new Error("No response body");
       const reader = response.body.getReader();
-      await decoderLLMInvoke({ reader, setCodeMessages }).finally(() => {
-        setMessages((prev) => [
-          ...prev,
-          { id: Date.now(), role: "ai", content: "Code has been updated!" },
-        ]);
-      });
+      await decoderLLMInvokeCodeMessages({ reader, setCodeMessages }).finally(
+        () => {
+          setMessages((prev) => [
+            ...prev,
+            { id: Date.now(), role: "ai", content: "Code has been updated!" },
+          ]);
+        },
+      );
     },
   });
 }

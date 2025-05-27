@@ -12,6 +12,7 @@ import { MicButton } from "@/components/mic-button";
 import { SendMessageButton } from "@/components/send-message-button";
 import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 import AutoSuggestInput from "@/components/auto-suggest-input/auto-suggest-input";
+import { FolderButton } from "@/components/folder-button";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
@@ -51,12 +52,14 @@ export default function ChatArea({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const { mutate, isPending: mutationIsPending } = useLLMChat({
-    setIsDisabled,
-    llmType,
-    setFocus,
-    setMessages,
-  });
+  const { mutate: mutateChatAnswer, isPending: mutationIsPending } = useLLMChat(
+    {
+      setIsDisabled,
+      llmType,
+      setFocus,
+      setMessages,
+    },
+  );
 
   useEffect(() => {
     setFocus("message");
@@ -100,7 +103,7 @@ export default function ChatArea({
     }
 
     setMessages((prev) => [...prev, userMessage]);
-    mutate({ message, _llmType: "architect" });
+    mutateChatAnswer({ message, _llmType: "architect" });
 
     reset();
   };
@@ -163,7 +166,7 @@ export default function ChatArea({
               {...register("message")}
               placeholder="Type your message..."
               disabled={isFieldDisabled}
-              className="w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="h-full w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -182,6 +185,7 @@ export default function ChatArea({
               isRecording={isRecording}
               disabled={isFieldDisabled}
             />
+            <FolderButton onClick={() => console.log("debug")} />
           </div>
         </div>
       </form>

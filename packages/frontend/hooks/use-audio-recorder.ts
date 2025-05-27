@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { routes } from "@/app/routes";
 
 type UseAudioRecorder = {
   setValue: (name: "message", value: string) => void;
@@ -13,7 +14,7 @@ export function useAudioRecorder({ setValue }: UseAudioRecorder) {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async ({ formData }: { formData: FormData }) => {
-      const response = await fetch("/api/transcribe", {
+      const response = await fetch(routes.transcribe, {
         method: "POST",
         body: formData,
       });

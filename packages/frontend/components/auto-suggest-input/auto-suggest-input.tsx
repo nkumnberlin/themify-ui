@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import styles from "./auto-suggest-input.module.css";
 import { ScrollArea } from "@ui/scroll-area";
 import { Card } from "@ui/card";
+import { routes } from "@/app/routes";
 
 export default function AutoSuggestInput({
   input,
@@ -21,7 +22,7 @@ export default function AutoSuggestInput({
   const { data: groupedSuggestions } = useQuery({
     queryKey: ["suggestions"],
     queryFn: async () => {
-      const response = await fetch("/api/suggestions");
+      const response = await fetch(routes.suggestions);
       if (!response.ok) {
         throw new Error("Failed to fetch suggestions");
       }

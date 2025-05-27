@@ -1,7 +1,7 @@
 import { AzureChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { fileBuilderInstructions } from "@/ai/instructions/file-builder";
+import { fileReaderInstructions } from "@/ai/instructions/file-reader";
 
 const fileReaderLLm = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
@@ -16,7 +16,7 @@ const fileReaderLLm = new AzureChatOpenAI({
   streaming: true,
 });
 
-const fileReaderPrompt = new SystemMessage(fileBuilderInstructions);
+const fileReaderPrompt = new SystemMessage(fileReaderInstructions);
 
 export const fileReaderAgent = createReactAgent({
   llm: fileReaderLLm,
