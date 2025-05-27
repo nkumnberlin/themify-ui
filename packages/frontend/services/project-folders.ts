@@ -1,9 +1,14 @@
 import fs from "fs";
 import path from "path";
 
-export function getGroupedProjectFolders() {
+type GroupedProjectEntries = Record<
+  string,
+  { path: string; isFolder: boolean }[]
+>;
+
+export function getGroupedProjectEntries() {
   const projectRoot = process.cwd();
-  const suggestions: string[] = [];
+  const grouped: GroupedProjectEntries = {};
 
   function walk(dir: string, base: string = "") {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -13,9 +18,17 @@ export function getGroupedProjectFolders() {
 
       const fullPath = path.join(dir, entry.name);
       const relativePath = path.join(base, entry.name);
+      const displayPath = `@${relativePath}${entry.isDirectory() ? "/" : ""}`;
+
+      const topGroup = relativePath.split("/")[0];
+      if (!grouped[topGroup]) grouped[topGroup] = [];
+
+      grouped[topGroup].push({
+        path: displayPath,
+        isFolder: entry.isDirectory(),
+      });
 
       if (entry.isDirectory()) {
-        suggestions.push(`@${relativePath}/`);
         walk(fullPath, relativePath);
       }
     }
@@ -23,13 +36,5 @@ export function getGroupedProjectFolders() {
 
   walk(projectRoot);
 
-  const grouped: Record<string, string[]> = {};
-
-  for (const suggestion of suggestions) {
-    const parts = suggestion.split("/");
-    const base = parts[0];
-    if (!grouped[base]) grouped[base] = [];
-    grouped[base].push(suggestion);
-  }
-  return grouped;
+  return grouped as GroupedProjectEntries satisfies GroupedProjectEntries;
 }

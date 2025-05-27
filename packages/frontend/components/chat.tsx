@@ -13,6 +13,7 @@ import { SendMessageButton } from "@/components/send-message-button";
 import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 import AutoSuggestInput from "@/components/auto-suggest-input/auto-suggest-input";
 import { FolderButton } from "@/components/folder-button";
+import { useLLMFileReader } from "@/hooks/use-llm-file-context";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
@@ -60,6 +61,11 @@ export default function ChatArea({
       setMessages,
     },
   );
+
+  const { mutate: mutateFileContext, isPending: fileContextIsPending } =
+    useLLMFileReader({
+      setMessages,
+    });
 
   useEffect(() => {
     setFocus("message");
@@ -112,10 +118,22 @@ export default function ChatArea({
     switchLLMToStartCoding("coder");
   };
 
-  console.log("chat", messages);
+  const handleFileContext = () => {
+    if (!messageValue.trim()) return;
+    const userMessage: Message = {
+      id: Date.now(),
+      role: "user",
+      content: messageValue,
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    mutateFileContext({ message: messageValue });
+  };
 
   const isFieldDisabled =
-    mutationIsPending || audioTranscriptIsPending || isDisabled;
+    mutationIsPending ||
+    audioTranscriptIsPending ||
+    isDisabled ||
+    fileContextIsPending;
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -167,12 +185,12 @@ export default function ChatArea({
               placeholder="Type your message..."
               disabled={isFieldDisabled}
               className="h-full w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(onSubmit)();
-                }
-              }}
+              // onKeyDown={(e) => {
+              //   if (e.key === "Enter" && !e.shiftKey) {
+              //     e.preventDefault();
+              //     handleSubmit(onSubmit)();
+              //   }
+              // }}
             />
           </AutoSuggestInput>
           <div className="flex flex-col gap-2">
@@ -185,7 +203,7 @@ export default function ChatArea({
               isRecording={isRecording}
               disabled={isFieldDisabled}
             />
-            <FolderButton onClick={() => console.log("debug")} />
+            <FolderButton onClick={handleFileContext} />
           </div>
         </div>
       </form>

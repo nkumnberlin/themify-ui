@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getGroupedProjectFolders } from "@/services/project-folders";
+import { getGroupedProjectEntries } from "@/services/project-folders";
 
 export async function GET() {
-  const grouped = await getGroupedProjectFolders();
+  const grouped = getGroupedProjectEntries();
   return NextResponse.json(grouped);
 }

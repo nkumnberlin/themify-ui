@@ -1,11 +1,16 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import styles from "./auto-suggest-input.module.css";
 import { ScrollArea } from "@ui/scroll-area";
 import { Card } from "@ui/card";
 import { routes } from "@/app/routes";
+
+type SuggestionEntry = {
+  path: string;
+  isFolder: boolean;
+};
 
 export default function AutoSuggestInput({
   input,
@@ -16,8 +21,10 @@ export default function AutoSuggestInput({
   children: ReactNode;
   handleSuggestion: (val: string) => void;
 }) {
-  const [filtered, setFiltered] = useState<string[]>([]);
+  const [filtered, setFiltered] = useState<SuggestionEntry[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: groupedSuggestions } = useQuery({
     queryKey: ["suggestions"],
@@ -26,43 +33,79 @@ export default function AutoSuggestInput({
       if (!response.ok) {
         throw new Error("Failed to fetch suggestions");
       }
-      return (await response.json()) as Promise<Record<string, string[]>>;
+      return (await response.json()) as Promise<
+        Record<string, SuggestionEntry[]>
+      >;
     },
   });
 
   useEffect(() => {
     if (!groupedSuggestions) return;
-    if (!input) return;
+    if (!input || input.length < 4) return;
     const match = input.match(/@(\S*)$/);
     if (!match) {
       return setShowSuggestions(false);
     }
     const term = match[1];
     const all = Object.values(groupedSuggestions).flat();
-    const filtered = all.filter((suggestion) =>
-      suggestion.includes(`@${term}`),
-    );
+    const filtered = all.filter((entry) => entry.path.includes(`@${term}`));
+
     setFiltered(filtered);
+    setHighlightedIndex(0);
     setShowSuggestions(true);
   }, [input, groupedSuggestions]);
-  console.log(filtered);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!showSuggestions || filtered.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev + 1) % filtered.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev === 0 ? filtered.length - 1 : prev - 1,
+      );
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const selected = filtered[highlightedIndex];
+      if (selected) {
+        e.preventDefault();
+        handleSuggestion(selected.path);
+        setShowSuggestions(false);
+      }
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  };
+
   return (
-    <div className="relative w-full">
+    <div
+      ref={containerRef}
+      onKeyDown={handleKeyDown}
+      className="relative w-full"
+      tabIndex={0} // Needed for div to receive key events
+    >
       {showSuggestions && filtered.length > 0 && (
         <Card
           className={`${styles.scrollRounded} absolute bottom-full mb-1 max-h-60 w-full overflow-y-auto p-0 shadow`}
         >
           <ScrollArea className="max-h-60">
-            {filtered.map((suggestion) => (
+            {filtered.map(({ path, isFolder }, index) => (
               <div
-                key={suggestion}
+                key={path}
                 onClick={() => {
-                  handleSuggestion(suggestion);
+                  handleSuggestion(path);
                   setShowSuggestions(false);
                 }}
-                className="hover:bg-muted cursor-pointer px-4 py-2"
+                className={`flex cursor-pointer items-center gap-2 px-4 py-2 ${
+                  index === highlightedIndex ? "bg-muted" : ""
+                } hover:bg-muted`}
               >
-                {suggestion}
+                {isFolder ? (
+                  <span className="font-medium text-blue-600">{path}</span>
+                ) : (
+                  <span>{path}</span>
+                )}
               </div>
             ))}
           </ScrollArea>

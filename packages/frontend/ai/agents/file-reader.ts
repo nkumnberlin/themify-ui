@@ -33,3 +33,11 @@ export async function fileReaderAgentLLM({
     messages: last_message,
   });
 }
+
+export async function readFilesFromPath({ message }: { message: string }) {
+  const last_message = new HumanMessage({
+    name: "user",
+    content: message,
+  });
+  return await fileReaderAgentLLM({ last_message });
+}
