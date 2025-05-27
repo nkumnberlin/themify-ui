@@ -12,6 +12,7 @@ import {
 } from "@/hooks/use-llm-chat";
 import { Button } from "@ui/button";
 import InjectHtmlToCursor from "@/components/inject-html-to-cursor";
+import AutoSuggestInput from "@/components/auto-suggest-input/auto-suggest-input";
 
 export type AddUserFeedbackToCode = {
   message: string;
@@ -140,6 +141,7 @@ export default function Home() {
           "absolute z-10 flex w-full flex-row justify-between px-1 pt-1"
         }
       >
+        <AutoSuggestInput />
         <ModeToggle />
         <Button
           onClick={() => {

@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { z } from "zod";
 
-const saveComponentTool = tool(
+export const saveComponentTool = tool(
   async ({
     componentName,
     componentCode,
@@ -14,12 +14,10 @@ const saveComponentTool = tool(
     const dir = path.join(process.cwd(), "components", "suggestions");
     const filePath = path.join(dir, `${componentName}.tsx`);
 
-    // Ensure the directory exists
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    // Write the component code to the file
     fs.writeFileSync(filePath, componentCode, "utf8");
 
     return `Component ${componentName} saved successfully.`;
@@ -34,7 +32,7 @@ const saveComponentTool = tool(
   },
 );
 
-const updateCodeRendererTool = tool(
+export const updateCodeRendererTool = tool(
   async ({ componentName }: { componentName: string }) => {
     const filePath = path.join(
       process.cwd(),
@@ -87,5 +85,3 @@ const updateCodeRendererTool = tool(
     }),
   },
 );
-
-export const tools = [saveComponentTool, updateCodeRendererTool];

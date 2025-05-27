@@ -1,10 +1,9 @@
 import { AzureChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { fileBuilderInstructions } from "@/ai/instructions/filebuilder";
-import { tools } from "@/ai/tools";
+import { fileBuilderInstructions } from "@/ai/instructions/file-builder";
 
-const fileBuilderLLm = new AzureChatOpenAI({
+const fileReaderLLm = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
   temperature: 0,
   maxTokens: undefined,
@@ -17,24 +16,20 @@ const fileBuilderLLm = new AzureChatOpenAI({
   streaming: true,
 });
 
-const fileBuilderPrompt = new SystemMessage(fileBuilderInstructions);
+const fileReaderPrompt = new SystemMessage(fileBuilderInstructions);
 
-export const fileBuilderAgent = createReactAgent({
-  llm: fileBuilderLLm,
-  prompt: fileBuilderPrompt,
-  tools: tools,
+export const fileReaderAgent = createReactAgent({
+  llm: fileReaderLLm,
+  prompt: fileReaderPrompt,
+  tools: [],
 });
 
-export async function fileBuilderAgentLLM({
+export async function fileReaderAgentLLM({
   last_message,
 }: {
   last_message: HumanMessage;
 }) {
-  return await fileBuilderAgent.invoke({
+  return await fileReaderAgent.invoke({
     messages: last_message,
   });
 }
-
-//
-//   context of existing work
-// danach sprache

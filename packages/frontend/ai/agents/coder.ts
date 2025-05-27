@@ -4,9 +4,9 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { coderInstructions } from "@/ai/instructions/coder";
 import { Message } from "@/app/page";
-import { fileBuilderAgentLLM } from "@/ai/agents/filebuilder";
+import { fileBuilderAgentLLM } from "@/ai/agents/file-builder";
 import { Feedback, GranularFeedback } from "@/ai/interface";
-import { feedbackCoderInstructions } from "@/ai/instructions/feedbackCoder";
+import { feedbackCoderInstructions } from "@/ai/instructions/feedback-coder";
 
 const coderLLM = new AzureChatOpenAI({
   model: "gpt-4.1-mini",

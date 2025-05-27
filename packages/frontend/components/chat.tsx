@@ -11,7 +11,7 @@ import remarkBreaks from "remark-breaks";
 import { MicButton } from "@/components/mic-button";
 import { SendMessageButton } from "@/components/send-message-button";
 import { useAudioRecorder } from "@/hooks/use-audio-recorder";
-// import { useAudioRecorder } from "@/hooks/use-audio-recorder";
+import AutoSuggestInput from "@/components/auto-suggest-input/auto-suggest-input";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
@@ -32,7 +32,8 @@ export default function ChatArea({
   messages,
   addUserFeedbackToCode,
 }: ChatAreaProperties) {
-  const { register, handleSubmit, reset, setFocus, setValue } = useForm<Form>();
+  const { register, handleSubmit, reset, setFocus, setValue, watch } =
+    useForm<Form>();
   const {
     isRecording,
     startRecording,
@@ -42,6 +43,7 @@ export default function ChatArea({
     setValue,
   });
 
+  const messageValue = watch("message");
   const [isDisabled, setIsDisabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -59,13 +61,28 @@ export default function ChatArea({
   useEffect(() => {
     setFocus("message");
   }, []);
-  console.log("is recording", isRecording);
+
   const handleMicClick = () => {
     if (isRecording) {
       stopRecording();
     } else {
       startRecording();
     }
+  };
+
+  const handleSuggestion = (suggestion: string) => {
+    const currentMessage = messageValue;
+    const lastAtMatch = currentMessage.match(/@(\S*)$/);
+
+    if (!lastAtMatch) return;
+
+    const matchIndex = currentMessage.lastIndexOf(lastAtMatch[0]);
+    const before = currentMessage.slice(0, matchIndex);
+    const after = currentMessage.slice(matchIndex + lastAtMatch[0].length);
+
+    const newText = `${before}${suggestion}${after}`;
+    setValue("message", newText);
+    setFocus("message");
   };
 
   const onSubmit = ({ message }: { message: string }) => {
@@ -138,18 +155,23 @@ export default function ChatArea({
         className="border-t border-gray-300 p-4"
       >
         <div className="flex h-full">
-          <Textarea
-            {...register("message")}
-            placeholder="Type your message..."
-            disabled={isFieldDisabled}
-            className="w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(onSubmit)();
-              }
-            }}
-          />
+          <AutoSuggestInput
+            input={messageValue}
+            handleSuggestion={handleSuggestion}
+          >
+            <Textarea
+              {...register("message")}
+              placeholder="Type your message..."
+              disabled={isFieldDisabled}
+              className="w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(onSubmit)();
+                }
+              }}
+            />
+          </AutoSuggestInput>
           <div className="flex flex-col gap-2">
             <SendMessageButton
               disabled={isFieldDisabled}

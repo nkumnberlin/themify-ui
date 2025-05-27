@@ -1,0 +1,18 @@
+.scrollRounded {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.scrollRounded::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollRounded::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 8px;
+}
+
+.scrollRounded::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
