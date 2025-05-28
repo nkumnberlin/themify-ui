@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { Feedback, GranularFeedback, LLMType } from "@/ai/interface";
 import { decoderLLMStream } from "@/utils/decoder-llm-stream";
-import { Message } from "@/app/page";
+import { Message } from "@/components/ai-assistant";
 import { decoderLLMInvokeCodeMessages } from "@/utils/decoder-llm-invoke-code-messages";
 import { routes } from "@/app/routes";
 

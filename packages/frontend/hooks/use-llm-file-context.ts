@@ -1,4 +1,4 @@
-import { Message } from "@/app/page";
+import { Message } from "@/components/ai-assistant";
 import { useMutation } from "@tanstack/react-query";
 import { routes } from "@/app/routes";
 import { decoderLLMInvokeChatMessages } from "@/utils/decoder-llm-invoke-chat-messages";

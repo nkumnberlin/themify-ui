@@ -4,6 +4,7 @@ import "./globals.css";
 import { ReactNode } from "react";
 import TanStackQuery from "@/provider/tanstack-query";
 import { ThemeProvider } from "@/provider/theme-provider";
+import AiAssistant from "@/components/ai-assistant";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +33,7 @@ export default function RootLayout({
       >
         <TanStackQuery>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
+            <AiAssistant>{children}</AiAssistant>
           </ThemeProvider>
         </TanStackQuery>
       </body>

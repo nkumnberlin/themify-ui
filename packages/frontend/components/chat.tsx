@@ -5,7 +5,6 @@ import { LLMType } from "@/ai/interface";
 import { Button } from "@/components/ui/button";
 import { startCoding } from "@/ai/instructions/architect";
 import useLLMChat from "@/hooks/use-llm-chat";
-import { Message } from "@/app/page";
 import { Textarea } from "@ui/textarea";
 import remarkBreaks from "remark-breaks";
 import { MicButton } from "@/components/mic-button";
@@ -15,6 +14,7 @@ import AutoSuggestInput from "@/components/auto-suggest-input/auto-suggest-input
 import { FolderButton } from "@/components/folder-button";
 import { useLLMFileReader } from "@/hooks/use-llm-file-context";
 import { usePathname } from "next/navigation";
+import { Message } from "@/components/ai-assistant";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
@@ -119,7 +119,7 @@ export default function ChatArea({
   const onStartCoding = () => {
     switchLLMToStartCoding("coder");
   };
-
+  console.log("pathname", pathname);
   const handleFileContext = () => {
     if (!messageValue.trim()) return;
     const messageWithLocation = `${messageValue} (Current Location of the User is: ${pathname})`;

@@ -1,4 +1,4 @@
-import { Message } from "@/app/page";
+import { Message } from "@/components/ai-assistant";
 import { AgentData, LLMType } from "@/ai/interface";
 
 type DecoderLlmStream = {

@@ -1,6 +1,13 @@
 "use client";
 
-import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
+import {
+  CSSProperties,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { CursorButton } from "@/components/cursor-button";
 import { useForm } from "react-hook-form";
 import { Input } from "@ui/input";
@@ -40,10 +47,8 @@ export default function InjectHtmlToCursor({
     setSelectedEl(null);
   };
 
-  useEffect(() => {
-    if (!active) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (
         containerRef.current &&
@@ -55,9 +60,12 @@ export default function InjectHtmlToCursor({
       } else {
         setHoveredEl(null);
       }
-    };
+    },
+    [containerRef, overlayRef],
+  );
 
-    const handleClick = (e: MouseEvent) => {
+  const handleClick = useCallback(
+    (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target.id === "activate-button") return;
 
@@ -71,7 +79,12 @@ export default function InjectHtmlToCursor({
         setActive(false);
         setHoveredEl(null);
       }
-    };
+    },
+    [reset, containerRef],
+  );
+
+  useEffect(() => {
+    if (!active) return;
 
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("click", handleClick, true);

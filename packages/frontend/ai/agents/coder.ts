@@ -3,7 +3,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { coderInstructions } from "@/ai/instructions/coder";
-import { Message } from "@/app/page";
+import { Message } from "@/components/ai-assistant";
 import { fileBuilderAgentLLM } from "@/ai/agents/file-builder";
 import { Feedback, GranularFeedback } from "@/ai/interface";
 import { feedbackCoderInstructions } from "@/ai/instructions/feedback-coder";

@@ -1,4 +1,4 @@
-import { Message } from "@/app/page";
+import { Message } from "@/components/ai-assistant";
 
 type DecoderLlmInvokeChatMessages = {
   setMessages: (updater: (prev: Message[]) => Message[]) => void;
