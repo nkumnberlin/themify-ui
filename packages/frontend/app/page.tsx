@@ -10,9 +10,7 @@ import {
   useLLMCoder,
   useUserFeedbackCoder,
 } from "@/hooks/use-llm-chat";
-import { Button } from "@ui/button";
 import InjectHtmlToCursor from "@/components/inject-html-to-cursor";
-import AutoSuggestInput from "@/components/auto-suggest-input/auto-suggest-input";
 
 export type AddUserFeedbackToCode = {
   message: string;
@@ -42,7 +40,8 @@ export default function Home() {
     [],
   );
 
-  const sidebarWidthClass = llmType === "architect" ? "w-full" : "w-1/3";
+  // const sidebarWidthClass = llmType === "architect" ? "w-full" : "w-1/3";
+  const sidebarWidthClass = "w-1/3";
   const isArchitect = llmType === "architect";
 
   const handleSetMessages = (updater: (prev: Message[]) => Message[]) => {
@@ -141,21 +140,7 @@ export default function Home() {
           "absolute z-10 flex w-full flex-row justify-between px-1 pt-1"
         }
       >
-        <AutoSuggestInput />
         <ModeToggle />
-        <Button
-          onClick={() => {
-            if (llmType === "coder") {
-              return setLlmType("architect");
-            }
-            setLlmType("coder");
-          }}
-        >
-          Switch to{" "}
-          {llmType === "coder"
-            ? "Architect to create a new project"
-            : "Coder to see the Results"}
-        </Button>
       </div>
       <aside
         className={`min-w-[300px] border-r border-gray-800 p-4 transition-[width] duration-500 ease-in-out ${sidebarWidthClass}`}

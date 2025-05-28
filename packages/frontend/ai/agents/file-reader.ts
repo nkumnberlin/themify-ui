@@ -2,6 +2,8 @@ import { AzureChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { fileReaderInstructions } from "@/ai/instructions/file-reader";
+import { readFilesTool } from "@/ai/tools";
+import { locationBasedComponentFinderInstructions } from "@/ai/instructions/location-finder";
 
 const fileReaderLLm = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
@@ -21,7 +23,17 @@ const fileReaderPrompt = new SystemMessage(fileReaderInstructions);
 export const fileReaderAgent = createReactAgent({
   llm: fileReaderLLm,
   prompt: fileReaderPrompt,
-  tools: [],
+  tools: [readFilesTool],
+});
+
+const locationFinderPrompt = new SystemMessage(
+  locationBasedComponentFinderInstructions,
+);
+
+export const locationFinderAgent = createReactAgent({
+  llm: fileReaderLLm,
+  prompt: locationFinderPrompt,
+  tools: [readFilesTool],
 });
 
 export async function fileReaderAgentLLM({
@@ -40,4 +52,26 @@ export async function readFilesFromPath({ message }: { message: string }) {
     content: message,
   });
   return await fileReaderAgentLLM({ last_message });
+}
+
+export async function locationFinderAgentLLLm({
+  last_message,
+}: {
+  last_message: HumanMessage;
+}) {
+  return await locationFinderAgent.invoke({
+    messages: last_message,
+  });
+}
+
+export async function readFilesFromPathWithLocation({
+  message,
+}: {
+  message: string;
+}) {
+  const last_message = new HumanMessage({
+    name: "agent",
+    content: message,
+  });
+  return await locationFinderAgentLLLm({ last_message });
 }

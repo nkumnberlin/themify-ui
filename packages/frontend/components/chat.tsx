@@ -14,6 +14,7 @@ import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 import AutoSuggestInput from "@/components/auto-suggest-input/auto-suggest-input";
 import { FolderButton } from "@/components/folder-button";
 import { useLLMFileReader } from "@/hooks/use-llm-file-context";
+import { usePathname } from "next/navigation";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
@@ -44,6 +45,7 @@ export default function ChatArea({
   } = useAudioRecorder({
     setValue,
   });
+  const pathname = usePathname();
 
   const messageValue = watch("message");
   const [isDisabled, setIsDisabled] = useState(false);
@@ -120,10 +122,11 @@ export default function ChatArea({
 
   const handleFileContext = () => {
     if (!messageValue.trim()) return;
+    const messageWithLocation = `${messageValue} (Current Location of the User is: ${pathname})`;
     const userMessage: Message = {
       id: Date.now(),
       role: "user",
-      content: messageValue,
+      content: messageWithLocation,
     };
     setMessages((prev) => [...prev, userMessage]);
     mutateFileContext({ message: messageValue });
@@ -185,12 +188,6 @@ export default function ChatArea({
               placeholder="Type your message..."
               disabled={isFieldDisabled}
               className="h-full w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              // onKeyDown={(e) => {
-              //   if (e.key === "Enter" && !e.shiftKey) {
-              //     e.preventDefault();
-              //     handleSubmit(onSubmit)();
-              //   }
-              // }}
             />
           </AutoSuggestInput>
           <div className="flex flex-col gap-2">

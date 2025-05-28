@@ -60,22 +60,27 @@ export default function AutoSuggestInput({
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setHighlightedIndex((prev) => (prev + 1) % filtered.length);
-    } else if (e.key === "ArrowUp") {
+      return;
+    }
+    if (e.key === "ArrowUp") {
       e.preventDefault();
       setHighlightedIndex((prev) =>
         prev === 0 ? filtered.length - 1 : prev - 1,
       );
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      const selected = filtered[highlightedIndex];
-      if (selected) {
-        e.preventDefault();
-        handleSuggestion(selected.path);
-        setShowSuggestions(false);
-      }
-    } else if (e.key === "Escape") {
-      setShowSuggestions(false);
+      return;
     }
+    if (e.key === "Escape") {
+      setShowSuggestions(false);
+      return;
+    }
+    if (e.key !== "Enter") return;
+    const selected = filtered[highlightedIndex];
+    if (!selected) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    handleSuggestion(selected.path);
+    setShowSuggestions(false);
   };
 
   return (

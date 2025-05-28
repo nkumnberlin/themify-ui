@@ -85,3 +85,29 @@ export const updateCodeRendererTool = tool(
     }),
   },
 );
+
+export const readFilesTool = tool(
+  async ({ filePaths }: { filePaths: string[] }) => {
+    const results: Record<string, string> = {};
+
+    for (const relativePath of filePaths) {
+      const absolutePath = path.join(process.cwd(), relativePath);
+      try {
+        const content = fs.readFileSync(absolutePath, "utf8");
+        results[relativePath] = content;
+      } catch (error) {
+        results[relativePath] =
+          `Error reading file: ${(error as Error).message}`;
+      }
+    }
+
+    return results;
+  },
+  {
+    name: "read_files",
+    description: "Reads the contents of specified files from the project root.",
+    schema: z.object({
+      filePaths: z.array(z.string()).describe("List of file paths to read."),
+    }),
+  },
+);
