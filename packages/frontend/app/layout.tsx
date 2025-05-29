@@ -4,7 +4,7 @@ import "./globals.css";
 import { ReactNode } from "react";
 import TanStackQuery from "@/provider/tanstack-query";
 import { ThemeProvider } from "@/provider/theme-provider";
-import AiAssistant from "@/components/ai-assistant";
+import AiAssistant from "@/app/ai-assistant";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

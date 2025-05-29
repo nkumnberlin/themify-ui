@@ -1,7 +1,7 @@
-import React from "react";
+import WaitlistManager from "@/components/testing/waitlist";
 
 const Page = () => {
-  return <div>Dashboard Page</div>;
+  return <WaitlistManager />;
 };
 
 export default Page;

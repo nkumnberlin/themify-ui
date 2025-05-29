@@ -1,4 +1,4 @@
-import { Message } from "@/components/ai-assistant";
+import { Message } from "@/app/ai-assistant";
 
 export type LLMType = "coder" | "architect";
 

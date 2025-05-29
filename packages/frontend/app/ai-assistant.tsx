@@ -3,7 +3,7 @@
 import { ReactNode, useState } from "react";
 import ChatArea, { BloomingLoadingText } from "@/components/chat";
 import { LLMType } from "@/ai/interface";
-import { ModeToggle } from "@/components/ui/toogle-dark-mode";
+import { ModeToggle } from "@ui/toogle-dark-mode";
 import CodeRenderer from "@/components/code-renderer";
 import {
   useAddGranularUserFeedbackCoder,

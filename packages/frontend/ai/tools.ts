@@ -89,7 +89,7 @@ export const updateCodeRendererTool = tool(
 export const readFilesTool = tool(
   async ({ filePaths }: { filePaths: string[] }) => {
     const results: Record<string, string> = {};
-
+    console.log("Reading files:", filePaths);
     for (const relativePath of filePaths) {
       const absolutePath = path.join(process.cwd(), relativePath);
       try {

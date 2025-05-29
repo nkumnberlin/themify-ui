@@ -14,7 +14,12 @@ import AutoSuggestInput from "@/components/auto-suggest-input/auto-suggest-input
 import { FolderButton } from "@/components/folder-button";
 import { useLLMFileReader } from "@/hooks/use-llm-file-context";
 import { usePathname } from "next/navigation";
-import { Message } from "@/components/ai-assistant";
+import { Message } from "@/app/ai-assistant";
+import {
+  folderInformationText,
+  locationInformationText,
+} from "@/ai/instructions/location-finder";
+import { useFilesToFolders } from "@/hooks/use-files-to-folders";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
@@ -69,6 +74,8 @@ export default function ChatArea({
       setMessages,
     });
 
+  const { data: groupedSuggestions } = useFilesToFolders();
+
   useEffect(() => {
     setFocus("message");
   }, []);
@@ -119,17 +126,17 @@ export default function ChatArea({
   const onStartCoding = () => {
     switchLLMToStartCoding("coder");
   };
-  console.log("pathname", pathname);
+
   const handleFileContext = () => {
-    if (!messageValue.trim()) return;
-    const messageWithLocation = `${messageValue} (Current Location of the User is: ${pathname})`;
+    const messageWithLocation = `${messageValue}. ${locationInformationText} ${pathname}.
+     ${folderInformationText}: ${JSON.stringify(groupedSuggestions)} `;
     const userMessage: Message = {
       id: Date.now(),
       role: "user",
       content: messageWithLocation,
     };
     setMessages((prev) => [...prev, userMessage]);
-    mutateFileContext({ message: messageValue });
+    mutateFileContext({ message: messageWithLocation });
   };
 
   const isFieldDisabled =

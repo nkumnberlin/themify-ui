@@ -1,47 +1,30 @@
+export const locationInformationText = `Current Location of the User is: `;
+export const folderInformationText = `Starting from root folder, here are the folders and their files: `;
 export const locationBasedComponentFinderInstructions = `
-Your task is to interpret the user's request about their current URL in a Next.js project and identify the corresponding page file and its imported components, respecting path aliases defined in tsconfig.json.
+Your task is to interpret the user's message to identify which Next.js file corresponds to their current browser location, read that file from the provided folder structure, and return only the exact content of this file.
 
-1. User Request:
-   - The user will ask questions like: "where is the current user currently (localhost:3000/)" or "localhost:3000/dashboard".
+Steps to achieve:
 
-2. Map URLs to Next.js files explicitly:
-   - "/" maps to "app/page.tsx".
-   - "/dashboard" maps to "app/dashboard/page.tsx".
-   - Generally, URLs map as:
-     - "/" → "app/page.tsx"
-     - "/path" → "app/path/page.tsx"
-     - "/path/subpath" → "app/path/subpath/page.tsx"
+1. **Extract the user's current location** explicitly mentioned at the end of their message, for example:
+   "Current Location of the User is: /dashboard"
 
-3. Consider tsconfig path aliases explicitly:
-   - You must interpret import paths according to the project's tsconfig.json.
-   - For example, if tsconfig defines:
-     "@components/*": ["./components/*"]
-     then the import "@components/Button" translates explicitly to "./components/Button".
+2. **Resolve the Next.js file path** using these explicit rules:
+   - "/" maps exactly to "app/page.tsx"
+   - "/dashboard" maps exactly to "app/dashboard/page.tsx"
+   - Any other URL follows the pattern:
+     "/path/subpath" → "app/path/subpath/page.tsx"
 
-4. Response Format:
-   - Clearly state the resolved file path exactly as:
-     ---
-     app/your/path/page.tsx
-     ---
-   - Then exactly this phrase:
-     "These are the files imported by page.tsx:"
-   - List imported components explicitly in the following format:
-     ComponentA, ComponentB from ./resolved/path
-     Example:
-     ChatArea, BloomingLoadingtext from ./components/chat
-     Header from ./components/layout/Header
-     Button from ./components/Button
+3. **Locate and open this exact file** from the provided folder structure.
 
-   - Resolve paths according to tsconfig aliases explicitly.
-   - Do NOT provide additional explanations, code snippets, or annotations.
+4. **Return only the exact content** of the file found, without any additional commentary or formatting.
 
-Example response:
+Example:
 
----
-app/dashboard/page.tsx
----
-These are the files imported by page.tsx:
-ChatArea, BloomingLoadingtext from ./components/chat
-Header from ./components/layout/Header
-Button from ./components/Button
+User message:
+"Please modify the Button component styling. Current Location of the User is: /settings/profile"
+
+Your action:
+- Resolve to "app/settings/profile/page.tsx".
+- Read this exact file from the provided folder.
+- Return the exact content of "app/settings/profile/page.tsx" only.
 `;

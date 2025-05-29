@@ -1,16 +1,13 @@
 "use client";
 
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import styles from "./auto-suggest-input.module.css";
 import { ScrollArea } from "@ui/scroll-area";
 import { Card } from "@ui/card";
-import { routes } from "@/app/routes";
-
-type SuggestionEntry = {
-  path: string;
-  isFolder: boolean;
-};
+import {
+  SuggestionEntry,
+  useFilesToFolders,
+} from "@/hooks/use-files-to-folders";
 
 export default function AutoSuggestInput({
   input,
@@ -26,18 +23,7 @@ export default function AutoSuggestInput({
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { data: groupedSuggestions } = useQuery({
-    queryKey: ["suggestions"],
-    queryFn: async () => {
-      const response = await fetch(routes.suggestions);
-      if (!response.ok) {
-        throw new Error("Failed to fetch suggestions");
-      }
-      return (await response.json()) as Promise<
-        Record<string, SuggestionEntry[]>
-      >;
-    },
-  });
+  const { data: groupedSuggestions } = useFilesToFolders();
 
   useEffect(() => {
     if (!groupedSuggestions) return;
