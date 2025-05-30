@@ -26,5 +26,4 @@ User message:
 Your action:
 - Resolve to "app/settings/profile/page.tsx".
 - Read this exact file from the provided folder.
-- Return the exact content of "app/settings/profile/page.tsx" only.
 `;

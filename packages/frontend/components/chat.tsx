@@ -12,7 +12,10 @@ import { SendMessageButton } from "@/components/send-message-button";
 import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 import AutoSuggestInput from "@/components/auto-suggest-input/auto-suggest-input";
 import { FolderButton } from "@/components/folder-button";
-import { useLLMFileReader } from "@/hooks/use-llm-file-context";
+import {
+  useLLMFileFeedback,
+  useLLMFileReader,
+} from "@/hooks/use-llm-file-context";
 import { usePathname } from "next/navigation";
 import { Message } from "@/app/ai-assistant";
 import {
@@ -68,6 +71,23 @@ export default function ChatArea({
       setMessages,
     },
   );
+
+  const { mutate: mutateFileContextFeedback } = useLLMFileFeedback({
+    setMessages,
+  });
+
+  const handleFileChangeContent = ({
+    message,
+    codeSnippet,
+  }: {
+    message: string;
+    codeSnippet: string;
+  }) => {
+    mutateFileContextFeedback({
+      message,
+      codeSnippet,
+    });
+  };
 
   const { mutate: mutateFileContext, isPending: fileContextIsPending } =
     useLLMFileReader({

@@ -23,3 +23,33 @@ export function useLLMFileReader({ setMessages }: LLMFileReaderProperties) {
     },
   });
 }
+
+//addUserFeedbackToCodeGenerated
+// { code, message }
+
+interface UseLLMFileFeedbackProperties extends LLMFileReaderProperties {}
+
+export function useLLMFileFeedback({
+  setMessages,
+}: UseLLMFileFeedbackProperties) {
+  return useMutation({
+    mutationFn: async ({
+      message,
+      codeSnippet,
+    }: {
+      message: string;
+      codeSnippet: string;
+    }) => {
+      const response = await fetch(routes.fileContext, {
+        method: "POST",
+        body: JSON.stringify({ message, codeSnippet }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.body) throw new Error("No response body");
+      const reader = response.body.getReader();
+      await decoderLLMInvokeChatMessages({ reader, setMessages });
+    },
+  });
+}

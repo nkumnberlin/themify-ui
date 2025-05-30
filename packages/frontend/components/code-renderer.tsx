@@ -1,5 +1,5 @@
 const CodeRenderer = () => {
-  return <></>;
+  return <div>test</div>;
 };
 
 export default CodeRenderer;
