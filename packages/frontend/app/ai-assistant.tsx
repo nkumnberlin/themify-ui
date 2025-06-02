@@ -4,7 +4,6 @@ import { ReactNode, useState } from "react";
 import ChatArea, { BloomingLoadingText } from "@/components/chat";
 import { LLMType } from "@/ai/interface";
 import { ModeToggle } from "@ui/toogle-dark-mode";
-import CodeRenderer from "@/components/code-renderer";
 import {
   useAddGranularUserFeedbackCoder,
   useLLMCoder,
@@ -83,10 +82,10 @@ export default function AiAssistant({ children }: AIAssistantProps) {
 
   const handleGranularUserFeedback = ({
     message,
-    codeSnippet,
+    dataBlockId,
   }: {
     message: string;
-    codeSnippet: string;
+    dataBlockId: string;
   }) => {
     const userMessage: Message = {
       id: Date.now(),
@@ -111,7 +110,7 @@ export default function AiAssistant({ children }: AIAssistantProps) {
     //     code: codeMessages,
     //   },
     // });
-    console.log(userMessage, codeSnippet);
+    console.log(userMessage, dataBlockId);
   };
 
   console.log("llmType", llmType);
@@ -163,7 +162,6 @@ export default function AiAssistant({ children }: AIAssistantProps) {
             handleGranularUserFeedback={handleGranularUserFeedback}
           >
             {children}
-            <CodeRenderer />
           </InjectHtmlToCursor>
         </FetchingIsInProcess>
       </main>
@@ -180,9 +178,9 @@ function FetchingIsInProcess({
   isPending: boolean;
 }) {
   return (
-    <div className="relative">
+    <div>
       {isPending && (
-        <div className="absolute inset-0 z-10 m-auto flex items-center justify-center bg-white/80">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80">
           <BloomingLoadingText />
         </div>
       )}

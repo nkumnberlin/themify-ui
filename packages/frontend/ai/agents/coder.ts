@@ -59,6 +59,7 @@ async function codeGenerator({
     name: "coder",
     content: response.messages[response.messages.length - 1].content,
   });
+  console.log("Last message from coder agent:", last_message.content);
   await fileBuilderAgentLLM({ last_message });
   return response;
 }

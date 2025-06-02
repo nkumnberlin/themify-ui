@@ -15,11 +15,17 @@ export const saveComponentTool = tool(
     const filePath = path.join(dir, `${componentName}.tsx`);
 
     if (!fs.existsSync(dir)) {
+      console.log("EXIST to:", filePath);
+
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(filePath, componentCode, "utf8");
-
+    try {
+      console.log("Saving component to:", filePath);
+      fs.writeFileSync(filePath, componentCode, "utf8");
+    } catch (e) {
+      console.error("Error writing file:", e);
+    }
     return `Component ${componentName} saved successfully.`;
   },
   {
@@ -41,13 +47,12 @@ export const updateCodeRendererTool = tool(
     );
     let content = fs.readFileSync(filePath, "utf8");
 
-    // 1. Add import if missing, inserting after the last import
+    // 1. (Unchanged) Add import if missing
     const importStatement = `import ${componentName} from '@suggestions/${componentName}';`;
     const importRegex = new RegExp(
       `import\\s+${componentName}\\s+from\\s+['"]@suggestions/${componentName}['"];?`,
     );
     if (!importRegex.test(content)) {
-      // find all import statements
       const importMatches = [...content.matchAll(/^import .+ from .+;$/gm)];
       if (importMatches.length) {
         const last = importMatches[importMatches.length - 1];
@@ -58,28 +63,38 @@ export const updateCodeRendererTool = tool(
           importStatement +
           content.slice(insertPos);
       } else {
-        // no imports at all
         content = importStatement + "\n\n" + content;
       }
     }
 
-    // 2. Replace inner contents of the first JSX fragment in the return
-    const fragmentRegex = /(return\s*\(\s*<>\s*)([\s\S]*?)(\s*<\/>\s*\);)/m;
-    if (!fragmentRegex.test(content)) {
+    // 2. Find the <div id="code-renderer">…</div> and replace its inner HTML with <ComponentName/>
+    const divRegex =
+      /<div\s+id=["']code-renderer["']([^>]*)>([\s\S]*?)<\/div>/m;
+
+    if (!divRegex.test(content)) {
+      console.error(
+        `Could not find <div id="code-renderer">…</div> inside ${filePath}.`,
+      );
+      console.log("Content of code-renderer.tsx was:\n", content);
       throw new Error(
-        "Could not find a JSX fragment in the return of code-renderer.tsx",
+        'Could not find <div id="code-renderer">…</div> in code-renderer.tsx',
       );
     }
-    content = content.replace(fragmentRegex, `$1<${componentName} />$3`);
 
-    // 3. Write back
+    // Replace just the inner portion of that div
+    content = content.replace(
+      divRegex,
+      `<div id="code-renderer"$1><${componentName} /></div>`,
+    );
+
+    // 3. Write the file back
     fs.writeFileSync(filePath, content, "utf8");
-    return `code-renderer.tsx updated to render <${componentName} />.`;
+    return `code-renderer.tsx updated so that <${componentName}/> is inside the div#code-renderer.`;
   },
   {
     name: "update_code_renderer",
     description:
-      "Updates code-renderer.tsx to render the specified component inside the first JSX fragment.",
+      'Updates code-renderer.tsx by injecting the specified component inside <div id="code-renderer">.',
     schema: z.object({
       componentName: z.string().describe("The name of the component to render"),
     }),

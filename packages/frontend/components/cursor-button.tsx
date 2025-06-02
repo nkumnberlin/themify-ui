@@ -4,6 +4,7 @@ import { MousePointer } from "lucide-react";
 interface CursorButtonProps {
   onClick: () => void;
   disabled?: boolean;
+  id?: string;
 }
 
 export function CursorButton({ onClick, disabled }: CursorButtonProps) {

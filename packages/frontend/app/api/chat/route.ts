@@ -41,6 +41,7 @@ export async function POST(req: Request) {
   if (!lastMessage) {
     return null;
   }
+  console.log("Last message:", lastMessage);
   return new NextResponse(lastMessage, {
     headers: {
       "Content-Type": "application/json",

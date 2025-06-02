@@ -12,10 +12,7 @@ import { SendMessageButton } from "@/components/send-message-button";
 import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 import AutoSuggestInput from "@/components/auto-suggest-input/auto-suggest-input";
 import { FolderButton } from "@/components/folder-button";
-import {
-  useLLMFileFeedback,
-  useLLMFileReader,
-} from "@/hooks/use-llm-file-context";
+import { useLLMFileFeedback } from "@/hooks/use-llm-file-context";
 import { usePathname } from "next/navigation";
 import { Message } from "@/app/ai-assistant";
 import {
@@ -76,23 +73,23 @@ export default function ChatArea({
     setMessages,
   });
 
-  const handleFileChangeContent = ({
-    message,
-    codeSnippet,
-  }: {
-    message: string;
-    codeSnippet: string;
-  }) => {
-    mutateFileContextFeedback({
-      message,
-      codeSnippet,
-    });
-  };
+  // const handleFileChangeContent = ({
+  //   message,
+  //   codeSnippet,
+  // }: {
+  //   message: string;
+  //   codeSnippet: string;
+  // }) => {
+  //   mutateFileContextFeedback({
+  //     message,
+  //     codeSnippet,
+  //   });
+  // };
 
-  const { mutate: mutateFileContext, isPending: fileContextIsPending } =
-    useLLMFileReader({
-      setMessages,
-    });
+  // const { mutate: mutateFileContext, isPending: fileContextIsPending } =
+  //   useLLMFileReader({
+  //     setMessages,
+  //   });
 
   const { data: groupedSuggestions } = useFilesToFolders();
 
@@ -156,14 +153,13 @@ export default function ChatArea({
       content: messageWithLocation,
     };
     setMessages((prev) => [...prev, userMessage]);
-    mutateFileContext({ message: messageWithLocation });
+    // mutateFileContext({ message: messageWithLocation });
   };
 
   const isFieldDisabled =
-    mutationIsPending ||
-    audioTranscriptIsPending ||
-    isDisabled ||
-    fileContextIsPending;
+    mutationIsPending || audioTranscriptIsPending || isDisabled;
+  // isDisabled ||
+  // fileContextIsPending;
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -239,7 +235,7 @@ export function BloomingLoadingText({
   text = "Themify is generating code...",
 }) {
   return (
-    <div className="prose prose-sm mt-3 mr-auto max-w-lg rounded-lg bg-gray-200 px-4 py-2 text-gray-900">
+    <div className="prose prose-sm mt-3 max-w-lg rounded-lg bg-gray-200 px-4 py-2 text-gray-900">
       <span>{text}</span>
       <span className="ml-1 space-x-1">
         <span

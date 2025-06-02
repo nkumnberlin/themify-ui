@@ -19,10 +19,10 @@ type InjectHtmlToCursorProps = {
   children: ReactNode;
   handleGranularUserFeedback: ({
     message,
-    codeSnippet,
+    dataBlockId,
   }: {
     message: string;
-    codeSnippet: string;
+    dataBlockId: string;
   }) => void;
 };
 
@@ -39,38 +39,38 @@ export default function InjectHtmlToCursor({
   const { register, handleSubmit, reset } = useForm<FormValues>();
 
   const onSubmit = (data: FormValues) => {
-    console.log("Change for element:", selectedEl, data.change);
+    if (!selectedEl) return;
+    const dataBlockId = selectedEl.getAttribute("data-block-id") || "";
     handleGranularUserFeedback({
       message: data.change,
-      codeSnippet: selectedEl?.outerHTML || "",
+      dataBlockId,
     });
     setSelectedEl(null);
   };
 
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        containerRef.current &&
-        containerRef.current.contains(target) &&
-        target !== overlayRef.current &&
-        target.id !== "activate-button"
-      ) {
-        setHoveredEl(target);
-      } else {
-        setHoveredEl(null);
-      }
-    },
-    [containerRef, overlayRef],
-  );
+  const findDataBlockElement = (el: HTMLElement | null) => {
+    if (!el || !containerRef.current) return null;
+    const candidate = el.closest<HTMLElement>("[data-block-id]");
+    if (candidate && containerRef.current.contains(candidate)) {
+      return candidate;
+    }
+    return null;
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const candidate = findDataBlockElement(target);
+    setHoveredEl(candidate);
+  }, []);
 
   const handleClick = useCallback(
     (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target.id === "activate-button") return;
 
-      if (containerRef.current?.contains(target)) {
-        setSelectedEl(target);
+      const candidate = findDataBlockElement(target);
+      if (candidate) {
+        setSelectedEl(candidate);
         reset();
         setActive(false);
         setHoveredEl(null);
@@ -80,19 +80,18 @@ export default function InjectHtmlToCursor({
         setHoveredEl(null);
       }
     },
-    [reset, containerRef],
+    [reset],
   );
 
   useEffect(() => {
     if (!active) return;
-
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("click", handleClick, true);
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("click", handleClick, true);
     };
-  }, [active, reset]);
+  }, [active, handleMouseMove, handleClick]);
 
   useEffect(() => {
     const overlay = overlayRef.current;
@@ -121,35 +120,37 @@ export default function InjectHtmlToCursor({
   }
 
   return (
-    <div>
-      <CursorButton onClick={() => setActive(!active)} />
-      <div ref={containerRef} className="relative">
-        <div
-          ref={overlayRef}
-          style={{
-            position: "absolute",
-            border: "2px dashed gray",
-            pointerEvents: "none",
-            display: "none",
-            zIndex: 999,
-          }}
-        />
-        {selectedEl && (
-          <form style={inputStyle} onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex rounded-2xl border-2 border-gray-100 bg-white p-2">
-              <Input
-                {...register("change", { required: true })}
-                placeholder="Enter change..."
-              />
-              <Button type="submit" className="ml-2">
-                Change
-              </Button>
-            </div>
-          </form>
-        )}
+    <div ref={containerRef} className="relative">
+      <CursorButton id="activate-button" onClick={() => setActive(!active)} />
 
-        {children}
-      </div>
+      {/* Highlight overlay */}
+      <div
+        ref={overlayRef}
+        style={{
+          position: "absolute",
+          border: "2px dashed gray",
+          pointerEvents: "none",
+          display: "none",
+          zIndex: 999,
+        }}
+      />
+
+      {selectedEl && (
+        <form style={inputStyle} onSubmit={handleSubmit(onSubmit)}>
+          <div className="flex rounded-2xl border-2 border-gray-100 bg-white p-2">
+            <Input
+              {...register("change", { required: true })}
+              placeholder="Enter change..."
+            />
+            <Button type="submit" className="ml-2">
+              Change
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {/* Render children exactly once */}
+      {children}
     </div>
   );
 }
