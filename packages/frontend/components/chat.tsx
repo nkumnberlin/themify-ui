@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { useEffect, useRef, useState } from "react";
 import { LLMType } from "@/ai/interface";
 import { Button } from "@/components/ui/button";
-import { startCoding } from "@/ai/instructions/architect";
+import { startCoding } from "@/ai/agents/instructions/architect";
 import useLLMChat from "@/hooks/use-llm-chat";
 import { Textarea } from "@ui/textarea";
 import remarkBreaks from "remark-breaks";
@@ -18,7 +18,7 @@ import { Message } from "@/app/ai-assistant";
 import {
   folderInformationText,
   locationInformationText,
-} from "@/ai/instructions/location-finder";
+} from "@/ai/agents/instructions/location-finder";
 import { useFilesToFolders } from "@/hooks/use-files-to-folders";
 
 export type ChatAreaProperties = {

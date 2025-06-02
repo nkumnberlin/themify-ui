@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { architectAgentLLM } from "@/ai/agents/architect";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import {
-  addGranularFeedbackToCodeGenerated,
   addUserFeedbackToCodeGenerated,
   startCodeGeneration,
 } from "@/ai/agents/coder";
+import { addGranularFeedbackToCodeGenerated } from "@/ai/agents/feedback/feedback-coder-agent";
 
 export async function POST(req: Request) {
   const { content, llmType, history, feedback, granularFeedback } =
@@ -27,6 +27,7 @@ export async function POST(req: Request) {
     stream = await startCodeGeneration({ history });
   }
   if (llmType === "coder" && granularFeedback) {
+    console.log("geht hier rein_________");
     stream = await addGranularFeedbackToCodeGenerated({ granularFeedback });
   }
   if (llmType === "coder" && feedback) {
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
   if (!lastMessage) {
     return null;
   }
-  console.log("Last message:", lastMessage);
+  console.log("Last message:_", lastMessage);
   return new NextResponse(lastMessage, {
     headers: {
       "Content-Type": "application/json",

@@ -1,10 +1,10 @@
-import { AzureChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { AzureChatOpenAI } from "@langchain/openai";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { fileBuilderInstructions } from "@/ai/agents/instructions/file-builder";
-import { saveComponentTool, updateCodeRendererTool } from "@/ai/tools";
+import { findDataTagTool } from "@/ai/tools";
+import { fileReaderInstructions } from "@/ai/agents/feedback/instructions/feedback-file-reader";
 
-const fileBuilderLLm = new AzureChatOpenAI({
+const feedbackFileReaderLLm = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
   temperature: 0,
   maxTokens: undefined,
@@ -17,20 +17,20 @@ const fileBuilderLLm = new AzureChatOpenAI({
   streaming: true,
 });
 
-const fileBuilderPrompt = new SystemMessage(fileBuilderInstructions);
+const feedbackFileReaderPrompt = new SystemMessage(fileReaderInstructions);
 
-export const fileBuilderAgent = createReactAgent({
-  llm: fileBuilderLLm,
-  prompt: fileBuilderPrompt,
-  tools: [saveComponentTool, updateCodeRendererTool],
+export const feedbackFileReaderAgent = createReactAgent({
+  llm: feedbackFileReaderLLm,
+  prompt: feedbackFileReaderPrompt,
+  tools: [findDataTagTool],
 });
 
-export async function fileBuilderAgentLLM({
+export async function getFeedbackFileReaderAgent({
   last_message,
 }: {
   last_message: HumanMessage;
 }) {
-  return await fileBuilderAgent.invoke({
+  return await feedbackFileReaderAgent.invoke({
     messages: last_message,
   });
 }

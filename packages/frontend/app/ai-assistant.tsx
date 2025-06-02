@@ -92,16 +92,16 @@ export default function AiAssistant({ children }: AIAssistantProps) {
       role: "user",
       content: message,
     };
-    setGranularUserFeedback((prev) => [...prev, userMessage]);
 
-    // mutateGranularFeedback({
-    //   _llmType: "coder",
-    //   granularFeedback: {
-    //     message,
-    //     code: codeMessages[codeMessages.length - 1],
-    //     codeSnippet,
-    //   },
-    // });
+    setMessages((prev) => [...prev, userMessage]);
+
+    mutateGranularFeedback({
+      _llmType: "coder",
+      granularFeedback: {
+        message,
+        dataBlockId,
+      },
+    });
 
     // mutateFeedback({
     //   _llmType: "coder",

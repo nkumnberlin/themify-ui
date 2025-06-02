@@ -14,8 +14,7 @@ export type Feedback = {
 
 export type GranularFeedback = {
   message: string;
-  code: Message;
-  codeSnippet: string;
+  dataBlockId: string;
 };
 
 export interface AgentData {

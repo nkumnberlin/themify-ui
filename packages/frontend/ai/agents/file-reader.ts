@@ -1,9 +1,9 @@
 import { AzureChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { fileReaderInstructions } from "@/ai/instructions/file-reader";
+import { fileReaderInstructions } from "@/ai/agents/instructions/file-reader";
 import { readFilesTool } from "@/ai/tools";
-import { locationBasedComponentFinderInstructions } from "@/ai/instructions/location-finder";
+import { locationBasedComponentFinderInstructions } from "@/ai/agents/instructions/location-finder";
 
 const fileReaderLLm = new AzureChatOpenAI({
   model: "gpt-4.1-mini",

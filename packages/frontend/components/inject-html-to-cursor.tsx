@@ -35,6 +35,7 @@ export default function InjectHtmlToCursor({
   const [selectedEl, setSelectedEl] = useState<HTMLElement | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const { register, handleSubmit, reset } = useForm<FormValues>();
 
@@ -57,58 +58,86 @@ export default function InjectHtmlToCursor({
     return null;
   };
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    const candidate = findDataBlockElement(target);
-    setHoveredEl(candidate);
-  }, []);
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!active) return;
+      const target = e.target as HTMLElement;
+      const candidate = findDataBlockElement(target);
+      setHoveredEl(candidate);
+    },
+    [active],
+  );
 
   const handleClick = useCallback(
     (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+
+      // If we're editing (selectedEl != null), and the click is outside the form,
+      // clear selection & highlight.
+      if (selectedEl) {
+        if (formRef.current && !formRef.current.contains(target)) {
+          setSelectedEl(null);
+          setHoveredEl(null);
+        }
+        return;
+      }
+
+      // If click was the activate button, do nothing here
       if (target.id === "activate-button") return;
 
-      const candidate = findDataBlockElement(target);
-      if (candidate) {
-        setSelectedEl(candidate);
-        reset();
-        setActive(false);
-        setHoveredEl(null);
-      } else {
-        setSelectedEl(null);
-        setActive(false);
-        setHoveredEl(null);
+      // Otherwise, if in active mode, try to select a data-block-id element
+      if (active) {
+        const candidate = findDataBlockElement(target);
+        if (candidate) {
+          setSelectedEl(candidate);
+          reset();
+          // Keep `active` false so that hovering stops; highlight will use `selectedEl` instead
+          setActive(false);
+          setHoveredEl(null);
+        }
       }
     },
-    [reset],
+    [active, selectedEl, reset],
   );
 
+  // Listen for mousemove only when active
   useEffect(() => {
     if (!active) return;
     document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("click", handleClick, true);
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, [active, handleMouseMove]);
+
+  // Listen for click when either active OR editing (selectedEl)
+  useEffect(() => {
+    if (!(active || selectedEl)) return;
+    document.addEventListener("click", handleClick, true);
+    return () => {
       document.removeEventListener("click", handleClick, true);
     };
-  }, [active, handleMouseMove, handleClick]);
+  }, [active, selectedEl, handleClick]);
 
+  // Position overlay around hoveredEl (if active) or selectedEl (if editing)
   useEffect(() => {
     const overlay = overlayRef.current;
     const container = containerRef.current;
-    if (!hoveredEl || !overlay || !container) {
+    const targetEl = active ? hoveredEl : selectedEl;
+
+    if (!targetEl || !overlay || !container) {
       overlay?.style.setProperty("display", "none");
       return;
     }
-    const rect = hoveredEl.getBoundingClientRect();
+    const rect = targetEl.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
     overlay.style.setProperty("display", "block");
     overlay.style.setProperty("top", `${rect.top - containerRect.top}px`);
     overlay.style.setProperty("left", `${rect.left - containerRect.left}px`);
     overlay.style.setProperty("width", `${rect.width}px`);
     overlay.style.setProperty("height", `${rect.height}px`);
-  }, [hoveredEl]);
+  }, [hoveredEl, selectedEl, active]);
 
+  // Calculate form position relative to selectedEl
   const inputStyle: CSSProperties = {};
   if (selectedEl && containerRef.current) {
     const rect = selectedEl.getBoundingClientRect();
@@ -121,7 +150,14 @@ export default function InjectHtmlToCursor({
 
   return (
     <div ref={containerRef} className="relative">
-      <CursorButton id="activate-button" onClick={() => setActive(!active)} />
+      <CursorButton
+        id="activate-button"
+        onClick={() => {
+          setActive((prev) => !prev);
+          setSelectedEl(null);
+          setHoveredEl(null);
+        }}
+      />
 
       {/* Highlight overlay */}
       <div
@@ -136,7 +172,11 @@ export default function InjectHtmlToCursor({
       />
 
       {selectedEl && (
-        <form style={inputStyle} onSubmit={handleSubmit(onSubmit)}>
+        <form
+          ref={formRef}
+          style={inputStyle}
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <div className="flex rounded-2xl border-2 border-gray-100 bg-white p-2">
             <Input
               {...register("change", { required: true })}
@@ -149,7 +189,6 @@ export default function InjectHtmlToCursor({
         </form>
       )}
 
-      {/* Render children exactly once */}
       {children}
     </div>
   );

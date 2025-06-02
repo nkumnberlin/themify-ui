@@ -1,6 +1,6 @@
 "use server";
 import { AzureChatOpenAI } from "@langchain/openai";
-import { architectInstruction } from "@/ai/instructions/architect";
+import { architectInstruction } from "@/ai/agents/instructions/architect";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";

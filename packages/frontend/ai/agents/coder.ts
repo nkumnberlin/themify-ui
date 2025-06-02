@@ -2,11 +2,11 @@ import { AzureChatOpenAI } from "@langchain/openai";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
-import { coderInstructions } from "@/ai/instructions/coder";
+import { coderInstructions } from "@/ai/agents/instructions/coder";
 import { Message } from "@/app/ai-assistant";
 import { fileBuilderAgentLLM } from "@/ai/agents/file-builder";
-import { Feedback, GranularFeedback } from "@/ai/interface";
-import { feedbackCoderInstructions } from "@/ai/instructions/feedback-coder";
+import { Feedback } from "@/ai/interface";
+import { feedbackCoderInstructions } from "@/ai/agents/feedback/instructions/feedback-coder";
 
 const coderLLM = new AzureChatOpenAI({
   model: "gpt-4.1-mini",
@@ -110,35 +110,5 @@ export async function addUserFeedbackToCodeGenerated({
   ];
   console.log("message sent", messages);
 
-  return await feedbackCodeGenerator({ messages });
-}
-
-export async function addGranularFeedbackToCodeGenerated({
-  granularFeedback,
-}: {
-  granularFeedback: GranularFeedback;
-}) {
-  const { code, message, codeSnippet } = granularFeedback;
-  const messages = [
-    {
-      role: "user",
-      content: message,
-    },
-    {
-      role: "user",
-      content: "The next Message is the code snippet.",
-    },
-    {
-      role: "user",
-      content: codeSnippet,
-    },
-    {
-      role: "user",
-      content: "The next Message is the entire component Code.",
-    },
-    code,
-  ];
-
-  console.log("message sent", messages);
   return await feedbackCodeGenerator({ messages });
 }
