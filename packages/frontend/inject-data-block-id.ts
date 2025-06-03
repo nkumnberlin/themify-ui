@@ -1,16 +1,18 @@
-import { Node, Project, SourceFile, SyntaxKind } from "ts-morph";
+import { Node, Project, SourceFile, SyntaxKind, ts } from "ts-morph";
 import path from "path";
 import fs from "fs";
 
+// ---- CONFIG ----
 // Config: Provide an array of absolute or relative file/directory paths.
 const config = {
   paths: [
-    "./components", // Directory
-    "./components/testing/",
+    "./components/suggestions/", // Directory
+    "./components/testing/waitlist.tsx",
     // Add more as needed
   ],
   projectRoot: process.cwd(),
 };
+// ---- END CONFIG ----
 
 // Helper: Get relative file path for block id
 function getRelativePath(filePath: string, root: string) {
@@ -23,22 +25,51 @@ function injectDataBlockIdOnRootJSX(
   projectRoot: string,
 ) {
   // Try to find the default export function or exported function/arrow function named as file
-  const functions = sourceFile
-    .getFunctions()
-    .map((fn) => ({ fn, name: fn.getName() }))
-    .concat(
-      sourceFile
-        .getVariableDeclarations()
-        .filter((v) => v.isExported())
-        .map((v) => {
-          const init = v.getInitializer();
-          if (init && Node.isArrowFunction(init)) {
-            return { fn: init, name: v.getName() }; // Use variable name!
-          }
-          return null;
-        })
-        .filter(Boolean) as { fn: any; name: string }[],
-    );
+  // Collect all possible function components (named and default)
+  const functions: { fn: any; name: string }[] = [];
+
+  // Named exported functions
+  sourceFile.getFunctions().forEach((fn) => {
+    if (fn.isExported()) {
+      functions.push({
+        fn,
+        name: fn.getName() || sourceFile.getBaseNameWithoutExtension(),
+      });
+    }
+  });
+
+  // Default exported function (declaration style)
+  const defaultExportSymbol = sourceFile.getDefaultExportSymbol();
+  if (defaultExportSymbol) {
+    const decl = defaultExportSymbol.getDeclarations()[0];
+    // Handle 'export default function ...' and 'export default () => ...'
+    if (Node.isFunctionDeclaration(decl)) {
+      functions.push({
+        fn: decl,
+        name: decl.getName() || sourceFile.getBaseNameWithoutExtension(),
+      });
+    }
+    // Also handle: 'const Comp = () => {}; export default Comp'
+    if (Node.isVariableDeclaration(decl)) {
+      const init = decl.getInitializer();
+      if (init && Node.isArrowFunction(init)) {
+        functions.push({
+          fn: init,
+          name: decl.getName() || sourceFile.getBaseNameWithoutExtension(),
+        });
+      }
+    }
+  }
+
+  // Exported variable declarations (arrow functions)
+  sourceFile.getVariableDeclarations().forEach((v) => {
+    if (v.isExported()) {
+      const init = v.getInitializer();
+      if (init && Node.isArrowFunction(init)) {
+        functions.push({ fn: init, name: v.getName() });
+      }
+    }
+  });
 
   let foundRoot = false;
 
@@ -51,7 +82,8 @@ function injectDataBlockIdOnRootJSX(
     );
     if (returnStmt) {
       const jsx = returnStmt.getFirstDescendant(
-        (d) => Node.isJsxElement(d) || Node.isJsxSelfClosingElement(d),
+        (d: Node<ts.Node> | undefined) =>
+          Node.isJsxElement(d) || Node.isJsxSelfClosingElement(d),
       );
       if (jsx && Node.isJsxElement(jsx)) {
         const opening = jsx.getOpeningElement();
