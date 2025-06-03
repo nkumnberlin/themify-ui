@@ -25,7 +25,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -39,13 +38,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  ChevronDown,
-  ChevronUp,
-  MoreHorizontal,
-  Plus,
-  Search,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, MoreHorizontal, Search } from "lucide-react";
 
 import type { DateRange } from "react-day-picker";
 import { endOfDay, isWithinInterval, parseISO, startOfDay } from "date-fns";
@@ -376,12 +369,6 @@ export default function WaitlistManager() {
             />
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add New Entry
-              </Button>
-            </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
               <DialogHeader>
                 <DialogTitle>Add New Waitlist Entry</DialogTitle>
