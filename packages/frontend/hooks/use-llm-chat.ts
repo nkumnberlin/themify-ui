@@ -3,7 +3,7 @@ import { Feedback, GranularFeedback, LLMType } from "@/ai/interface";
 import { decoderLLMStream } from "@/utils/decoder-llm-stream";
 import { Message } from "@/app/ai-assistant";
 import { decoderLLMInvokeCodeMessages } from "@/utils/decoder-llm-invoke-code-messages";
-import { routes } from "@/app/routes";
+import { routes } from "@/app/api/routes";
 
 export type UseLMChat = {
   setIsDisabled?: (val: boolean) => void;

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@ui/button";
 import { Mic } from "lucide-react";
 
 interface MicButtonProps {
@@ -20,7 +20,7 @@ export function MicButton({ onClick, disabled, isRecording }: MicButtonProps) {
           ? "bg-red-600 text-white hover:bg-red-700"
           : "hover:bg-gray-100"
       }`}
-      aria-label="Start voice input"
+      aria-label="Start voice input" data-block-id="components/chat-tools/mic-button.tsx MicButton"
     >
       <Mic className="h-4 w-4" />
     </Button>

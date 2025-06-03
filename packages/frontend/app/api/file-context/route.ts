@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readFilesFromPathWithLocation } from "@/ai/agents/file-reader";
-import { addGranularFeedbackToCodeGenerated } from "@/ai/agents/coder";
 import { Message } from "@/app/ai-assistant";
+import { addGranularFeedbackToCodeGenerated } from "@/ai/agents/feedback/feedback-coder-agent";
 
 export async function POST(req: Request) {
   const { message, codeSnippet, granularFeedback, changeRequest } =

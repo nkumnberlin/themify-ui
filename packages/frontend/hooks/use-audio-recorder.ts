@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { routes } from "@/app/routes";
+import { routes } from "@/app/api/routes";
 
 type UseAudioRecorder = {
   setValue: (name: "message", value: string) => void;

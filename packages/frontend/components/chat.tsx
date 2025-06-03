@@ -7,19 +7,12 @@ import { startCoding } from "@/ai/agents/instructions/architect";
 import useLLMChat from "@/hooks/use-llm-chat";
 import { Textarea } from "@ui/textarea";
 import remarkBreaks from "remark-breaks";
-import { MicButton } from "@/components/mic-button";
-import { SendMessageButton } from "@/components/send-message-button";
 import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 import AutoSuggestInput from "@/components/auto-suggest-input/auto-suggest-input";
-import { FolderButton } from "@/components/folder-button";
-import { useLLMFileFeedback } from "@/hooks/use-llm-file-context";
 import { usePathname } from "next/navigation";
 import { Message } from "@/app/ai-assistant";
-import {
-  folderInformationText,
-  locationInformationText,
-} from "@/ai/agents/instructions/location-finder";
 import { useFilesToFolders } from "@/hooks/use-files-to-folders";
+import ChatTools from "@/components/chat-tools/chat-tools";
 
 export type ChatAreaProperties = {
   llmType: LLMType;
@@ -68,28 +61,6 @@ export default function ChatArea({
       setMessages,
     },
   );
-
-  const { mutate: mutateFileContextFeedback } = useLLMFileFeedback({
-    setMessages,
-  });
-
-  // const handleFileChangeContent = ({
-  //   message,
-  //   codeSnippet,
-  // }: {
-  //   message: string;
-  //   codeSnippet: string;
-  // }) => {
-  //   mutateFileContextFeedback({
-  //     message,
-  //     codeSnippet,
-  //   });
-  // };
-
-  // const { mutate: mutateFileContext, isPending: fileContextIsPending } =
-  //   useLLMFileReader({
-  //     setMessages,
-  //   });
 
   const { data: groupedSuggestions } = useFilesToFolders();
 
@@ -142,18 +113,6 @@ export default function ChatArea({
 
   const onStartCoding = () => {
     switchLLMToStartCoding("coder");
-  };
-
-  const handleFileContext = () => {
-    const messageWithLocation = `${messageValue}. ${locationInformationText} ${pathname}.
-     ${folderInformationText}: ${JSON.stringify(groupedSuggestions)} `;
-    const userMessage: Message = {
-      id: Date.now(),
-      role: "user",
-      content: messageWithLocation,
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    // mutateFileContext({ message: messageWithLocation });
   };
 
   const isFieldDisabled =
@@ -213,18 +172,12 @@ export default function ChatArea({
               className="h-full w-full rounded border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </AutoSuggestInput>
-          <div className="flex flex-col gap-2">
-            <SendMessageButton
-              disabled={isFieldDisabled}
-              onClick={handleSubmit(onSubmit)}
-            />
-            <MicButton
-              onClick={handleMicClick}
-              isRecording={isRecording}
-              disabled={isFieldDisabled}
-            />
-            <FolderButton onClick={handleFileContext} />
-          </div>
+          <ChatTools
+            onSend={handleSubmit(onSubmit)}
+            onMic={handleMicClick}
+            isRecording={isRecording}
+            disabled={isFieldDisabled}
+          />
         </div>
       </form>
     </div>

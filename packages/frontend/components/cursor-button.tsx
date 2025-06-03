@@ -11,7 +11,7 @@ export function CursorButton({ onClick, disabled }: CursorButtonProps) {
   return (
     <div
       style={{ left: "calc(95.6667% - 30px)" }}
-      className="absolute z-10 flex px-1 pt-1 transition-[width] duration-500 ease-in-out"
+      className="absolute z-10 flex px-1 pt-1 transition-[width] duration-500 ease-in-out" data-block-id="components/cursor-button.tsx CursorButton"
     >
       <Button
         id="activate-button"
