@@ -47,7 +47,7 @@ function annotateJsxElement(
   const line = opening.getStartLineNumber();
   opening.addAttribute({
     name: "data-block-id",
-    initializer: `"${relPath} line=${line}"`,
+    initializer: `"${relPath} line:${line}"`,
   });
   return true;
 }
@@ -63,7 +63,7 @@ function traverseAndAnnotate(node: Node, relPath: string): boolean {
       const opening = getOpeningElement(descendant);
       const existingAttr = opening.getAttribute("data-block-id");
       const line = opening.getStartLineNumber();
-      const newValue = `"${relPath} line=${line}"`;
+      const newValue = `"${relPath} line:${line}"`;
 
       if (existingAttr && Node.isJsxAttribute(existingAttr)) {
         // Now that we know it's a JsxAttribute, we can safely call setInitializer
