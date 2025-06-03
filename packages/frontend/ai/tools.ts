@@ -193,6 +193,52 @@ function parseImports(fileText: string): string[] {
   return matches;
 }
 
+// Load tsconfig.json once to extract alias mappings
+const tsconfigPath = path.resolve(process.cwd(), "tsconfig.json");
+let aliasMap: Record<string, string[]> = {};
+try {
+  const tsconfigRaw = fs.readFileSync(tsconfigPath, "utf8");
+  const tsconfig = JSON.parse(tsconfigRaw);
+  const paths = tsconfig.compilerOptions?.paths || {};
+  // Normalize keys and values (strip trailing "/*" from keys and values)
+  for (const [aliasPattern, targetArray] of Object.entries<string[]>(paths)) {
+    const normalizedKey = aliasPattern.replace(/\/\*$/, "");
+    aliasMap[normalizedKey] = targetArray.map((p) => p.replace(/\/\*$/, ""));
+  }
+} catch {
+  // If tsconfig.json is missing or malformed, aliasMap remains empty
+  aliasMap = {};
+}
+
+/**
+ * Attempt to resolve an import string, first by alias mapping (if any),
+ * then fallback to the existing resolveImport helper.
+ */
+function resolveWithAlias(
+  importPath: string,
+  currentDir: string,
+): string | null {
+  // Check each alias prefix
+  for (const aliasKey of Object.keys(aliasMap)) {
+    if (importPath === aliasKey || importPath.startsWith(aliasKey + "/")) {
+      const remainder =
+        importPath === aliasKey ? "" : importPath.slice(aliasKey.length + 1);
+      const targets = aliasMap[aliasKey];
+      for (const targetBase of targets) {
+        // Build a candidate path under each targetBase
+        const candidate = path.resolve(process.cwd(), targetBase, remainder);
+        // Let the existing resolver try extensions (.ts/.tsx/.js/.jsx)
+        const resolved = resolveImport(candidate, currentDir);
+        if (resolved) {
+          return resolved;
+        }
+      }
+    }
+  }
+  // No alias match: fallback to standard resolution
+  return resolveImport(importPath, currentDir);
+}
+
 export const findDataTagTool = tool(
   async ({
     startingComponentPath,
@@ -203,12 +249,15 @@ export const findDataTagTool = tool(
   }) => {
     const visited = new Set<string>();
 
-    // Recursively search for dataTag in file and its imports.
+    /**
+     * Recursively search for dataTag in file and its imports.
+     * Returns "<relative-path>\n<file-contents>" on first match, or null if not found.
+     */
     async function recurse(filePath: string): Promise<string | null> {
-      const absPath =
-        filePath.startsWith("/") || filePath.startsWith(".")
-          ? path.resolve(process.cwd(), filePath)
-          : path.resolve(process.cwd(), filePath);
+      // Resolve to an absolute path
+      const absPath = filePath.startsWith("/")
+        ? path.resolve(process.cwd(), filePath)
+        : path.resolve(process.cwd(), filePath);
 
       if (visited.has(absPath)) {
         return null;
@@ -222,20 +271,24 @@ export const findDataTagTool = tool(
       let contents: string;
       try {
         contents = fs.readFileSync(absPath, "utf8");
-      } catch (err) {
+      } catch {
         return null;
       }
 
-      // Check if `dataTag` string appears anywhere in this file.
+      // If dataTag is found in this file, return relative path + newline + full contents
       if (contents.includes(dataTag)) {
-        return contents;
+        const relPath = path
+          .relative(process.cwd(), absPath)
+          .replace(/\\/g, "/");
+        return `${relPath}\n${contents}`;
       }
 
-      // Otherwise, parse imports and recurse.
+      // Otherwise, parse imports and recurse into each referenced component
       const imports = parseImports(contents);
       const dir = path.dirname(absPath);
       for (const imp of imports) {
-        const resolved = resolveImport(imp, dir);
+        // Use alias-aware resolution first, then fallback to the existing resolver
+        const resolved = resolveWithAlias(imp, dir);
         if (resolved) {
           const found = await recurse(resolved);
           if (found) {
@@ -248,16 +301,13 @@ export const findDataTagTool = tool(
     }
 
     const result = await recurse(startingComponentPath);
-    if (result) {
-      return result;
-    } else {
-      return `Data tag "${dataTag}" not found in "${startingComponentPath}" or its imported components.`;
-    }
+    // If found, return "<relative-path>\n<file-contents>"; otherwise, return an empty string
+    return result ?? "";
   },
   {
     name: "find_data_tag",
     description:
-      'Recursively searches a React component (and its imported subcomponents) for a given data-tag (e.g. data-block-id="..."). Returns the full file contents where the data-tag is found.',
+      'Recursively searches a React component (and its imported subcomponents) for a given data-tag (e.g. data-block-id="..."). Returns the resolved relative path and full file contents where the data-tag is found.',
     schema: z.object({
       startingComponentPath: z
         .string()
