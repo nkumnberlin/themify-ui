@@ -1,148 +1,110 @@
-import { Node, Project, SourceFile, SyntaxKind, ts } from "ts-morph";
+import { Node, Project, SyntaxKind } from "ts-morph";
 import path from "path";
 import fs from "fs";
 
 // ---- CONFIG ----
-// Config: Provide an array of absolute or relative file/directory paths.
 const config = {
   paths: [
-    "./components/suggestions/", // Directory
-    "./components/testing/waitlist.tsx",
-    // Add more as needed
+    "./components/suggestions/InputField.tsx", // Your file here
+    "./components/suggestions/InputDisplay.tsx", // Your file here
   ],
   projectRoot: process.cwd(),
 };
 // ---- END CONFIG ----
+function getFunctionBody(fn: Node) {
+  if (
+    Node.isFunctionDeclaration(fn) ||
+    Node.isFunctionExpression(fn) ||
+    Node.isArrowFunction(fn)
+  ) {
+    return fn.getBody();
+  }
+  return undefined;
+}
 
-// Helper: Get relative file path for block id
+function getRootReturn(body: Node) {
+  if (body.getKind() === SyntaxKind.Block) {
+    // Typecast to get getStatements()
+    // @ts-ignore
+    const stmts = body.getStatements?.() || [];
+    return stmts.find(
+      (stmt: Node) => stmt.getKind() === SyntaxKind.ReturnStatement,
+    );
+  } else if (body.getKind() === SyntaxKind.ReturnStatement) {
+    return body;
+  }
+  return undefined;
+}
+
 function getRelativePath(filePath: string, root: string) {
   return path.relative(root, filePath).replace(/\\/g, "/");
 }
-
-// Helper: Safely add data-block-id attribute
-function injectDataBlockIdOnRootJSX(
-  sourceFile: SourceFile,
-  projectRoot: string,
-) {
-  // Try to find the default export function or exported function/arrow function named as file
-  // Collect all possible function components (named and default)
-  const functions: { fn: any; name: string }[] = [];
-
-  // Named exported functions
-  sourceFile.getFunctions().forEach((fn) => {
-    if (fn.isExported()) {
-      functions.push({
-        fn,
-        name: fn.getName() || sourceFile.getBaseNameWithoutExtension(),
-      });
-    }
-  });
-
-  // Default exported function (declaration style)
-  const defaultExportSymbol = sourceFile.getDefaultExportSymbol();
-  if (defaultExportSymbol) {
-    const decl = defaultExportSymbol.getDeclarations()[0];
-    // Handle 'export default function ...' and 'export default () => ...'
-    if (Node.isFunctionDeclaration(decl)) {
-      functions.push({
-        fn: decl,
-        name: decl.getName() || sourceFile.getBaseNameWithoutExtension(),
-      });
-    }
-    // Also handle: 'const Comp = () => {}; export default Comp'
-    if (Node.isVariableDeclaration(decl)) {
-      const init = decl.getInitializer();
-      if (init && Node.isArrowFunction(init)) {
-        functions.push({
-          fn: init,
-          name: decl.getName() || sourceFile.getBaseNameWithoutExtension(),
-        });
-      }
-    }
+function getOpening(element: any) {
+  if (Node.isJsxElement(element)) {
+    return element.getOpeningElement();
+  } else if (Node.isJsxSelfClosingElement(element)) {
+    return element;
   }
-
-  // Exported variable declarations (arrow functions)
-  sourceFile.getVariableDeclarations().forEach((v) => {
-    if (v.isExported()) {
-      const init = v.getInitializer();
-      if (init && Node.isArrowFunction(init)) {
-        functions.push({ fn: init, name: v.getName() });
-      }
-    }
-  });
-
-  let foundRoot = false;
-
-  for (const { fn, name } of functions) {
-    const body = fn.getBody && fn.getBody();
-    if (!body) continue;
-    // Find return statement
-    const returnStmt = body.getFirstDescendantByKind(
-      SyntaxKind.ReturnStatement,
-    );
-    if (returnStmt) {
-      const jsx = returnStmt.getFirstDescendant(
-        (d: Node<ts.Node> | undefined) =>
-          Node.isJsxElement(d) || Node.isJsxSelfClosingElement(d),
-      );
-      if (jsx && Node.isJsxElement(jsx)) {
-        const opening = jsx.getOpeningElement();
-        if (!opening.getAttribute("data-block-id")) {
-          const relPath = getRelativePath(
-            sourceFile.getFilePath(),
-            projectRoot,
-          );
-          const compName = name || sourceFile.getBaseNameWithoutExtension();
-          opening.addAttribute({
-            name: "data-block-id",
-            initializer: `"${relPath} ${compName}"`,
-          });
-          foundRoot = true;
-        }
-      }
-      if (jsx && Node.isJsxSelfClosingElement(jsx)) {
-        if (!jsx.getAttribute("data-block-id")) {
-          const relPath = getRelativePath(
-            sourceFile.getFilePath(),
-            projectRoot,
-          );
-          const compName = name || sourceFile.getBaseNameWithoutExtension();
-          jsx.addAttribute({
-            name: "data-block-id",
-            initializer: `"${relPath} ${compName}"`,
-          });
-          foundRoot = true;
-        }
-      }
-    }
-  }
-
-  return foundRoot;
+  return undefined;
 }
 
-// Recursively walk directories and find .tsx files
-function collectTsxFiles(entry: string): string[] {
-  const abs = path.resolve(config.projectRoot, entry);
-  if (!fs.existsSync(abs)) return [];
-  if (fs.statSync(abs).isFile()) {
-    return abs.endsWith(".tsx") ? [abs] : [];
-  }
-  // Directory: walk recursively
-  return fs.readdirSync(abs).flatMap((f) => collectTsxFiles(path.join(abs, f)));
-}
-
-// Main Script
-function main() {
-  const files = config.paths.flatMap(collectTsxFiles);
+function annotateRootReturnedJsx(filePath: string, projectRoot: string) {
   const project = new Project();
+  const sourceFile = project.addSourceFileAtPath(filePath);
 
-  for (const filePath of files) {
-    const sourceFile = project.addSourceFileAtPath(filePath);
-    console.log(`Processing ${filePath}`);
-    const changed = injectDataBlockIdOnRootJSX(sourceFile, config.projectRoot);
-    if (changed) {
+  const fn =
+    sourceFile.getFunctions().find((f) => f.isExported()) ||
+    sourceFile.getDefaultExportSymbol()?.getDeclarations()[0];
+
+  if (!fn) return false;
+
+  const body = getFunctionBody(fn);
+  if (!body) return false;
+
+  const rootReturn = getRootReturn(body);
+  if (!rootReturn) return false;
+
+  let jsx = rootReturn.getExpression();
+  if (!jsx) return false;
+
+  // Unwrap ParenthesizedExpression if present
+  if (Node.isParenthesizedExpression(jsx)) {
+    jsx = jsx.getExpression();
+  }
+
+  if (Node.isJsxElement(jsx) || Node.isJsxSelfClosingElement(jsx)) {
+    const opening = getOpening(jsx);
+    if (!opening) return false;
+    const tag = opening.getTagNameNode().getText();
+    const hasClassName = opening.getAttribute("className");
+
+    if (
+      (["main", "section", "div"].includes(tag) || hasClassName) &&
+      !opening.getAttribute("data-block-id")
+    ) {
+      const relPath = getRelativePath(filePath, projectRoot);
+      const line = opening.getStartLineNumber();
+      opening.addAttribute({
+        name: "data-block-id",
+        initializer: `"${relPath} line:${line}"`,
+      });
       sourceFile.saveSync();
-      console.log(`!! Injected data-block-id in ${filePath}`);
+      return true;
+    }
+  }
+  return false;
+}
+
+function main() {
+  const files = config.paths;
+  for (const filePath of files) {
+    if (!fs.existsSync(filePath)) continue;
+    if (!filePath.endsWith(".tsx")) continue;
+    const changed = annotateRootReturnedJsx(filePath, config.projectRoot);
+    if (changed) {
+      console.log(`Injected data-block-id in ${filePath}`);
+    } else {
+      console.log(`No annotation needed for ${filePath}`);
     }
   }
 }
