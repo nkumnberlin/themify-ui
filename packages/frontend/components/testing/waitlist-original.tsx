@@ -82,7 +82,7 @@ function LeadDetailDialog({
   }
 
   return (
-    <Dialog data-block-id="components/testing/waitlist.tsx line=85">
+    <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           View
@@ -205,7 +205,7 @@ export default function LeadsDashboard() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl p-6" data-block-id="components/testing/waitlist.tsx line=208">
+    <main className="mx-auto max-w-7xl p-6">
       <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold">Leads Dashboard</h1>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
