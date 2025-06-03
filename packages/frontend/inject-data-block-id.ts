@@ -11,6 +11,7 @@ import fs from "fs";
 // ---- CONFIG ----
 const config = {
   paths: [
+    "./components/testing/waitlist.tsx",
     "./components/suggestions/InputDisplay.tsx", // Add your file paths here
     "./components/suggestions/InputField.tsx", // Add your file paths here
     "./components/suggestions/LeadsDashboard.tsx", // Add your file paths here
@@ -95,50 +96,65 @@ function getFunctionBody(fn: Node): Block | undefined {
   return undefined;
 }
 
+// function annotateFile(filePath: string, projectRoot: string): boolean {
+//   const project = new Project();
+//   const sourceFile = project.addSourceFileAtPath(filePath);
+//   const relPath = getRelativePath(filePath, projectRoot);
+//   let changed = false;
+//
+//   const functions = sourceFile.getFunctions().filter((fn) => fn.isExported());
+//   const defaultExport = sourceFile
+//     .getDefaultExportSymbol()
+//     ?.getDeclarations()[0];
+//   if (defaultExport && Node.isFunctionDeclaration(defaultExport)) {
+//     functions.push(defaultExport);
+//   }
+//
+//   for (const fn of functions) {
+//     const body = getFunctionBody(fn);
+//     if (!body) continue;
+//
+//     const returnStmt = body
+//       .getStatements()
+//       .find((stmt) => Node.isReturnStatement(stmt));
+//     if (!returnStmt || !Node.isReturnStatement(returnStmt)) continue;
+//
+//     let expr = returnStmt.getExpression();
+//     if (!expr) continue;
+//
+//     // Unwrap ParenthesizedExpression if present
+//     while (Node.isParenthesizedExpression(expr)) {
+//       expr = expr.getExpression();
+//     }
+//
+//     if (Node.isJsxElement(expr) || Node.isJsxSelfClosingElement(expr)) {
+//       if (annotateJsxElement(expr, relPath)) {
+//         changed = true;
+//       }
+//       if (traverseAndAnnotate(expr, relPath)) {
+//         changed = true;
+//       }
+//     }
+//   }
+//
+//   if (changed) {
+//     sourceFile.saveSync();
+//   }
+//   return changed;
+// }
 function annotateFile(filePath: string, projectRoot: string): boolean {
   const project = new Project();
   const sourceFile = project.addSourceFileAtPath(filePath);
   const relPath = getRelativePath(filePath, projectRoot);
   let changed = false;
 
-  const functions = sourceFile.getFunctions().filter((fn) => fn.isExported());
-  const defaultExport = sourceFile
-    .getDefaultExportSymbol()
-    ?.getDeclarations()[0];
-  if (defaultExport && Node.isFunctionDeclaration(defaultExport)) {
-    functions.push(defaultExport);
-  }
-
-  for (const fn of functions) {
-    const body = getFunctionBody(fn);
-    if (!body) continue;
-
-    const returnStmt = body
-      .getStatements()
-      .find((stmt) => Node.isReturnStatement(stmt));
-    if (!returnStmt || !Node.isReturnStatement(returnStmt)) continue;
-
-    let expr = returnStmt.getExpression();
-    if (!expr) continue;
-
-    // Unwrap ParenthesizedExpression if present
-    while (Node.isParenthesizedExpression(expr)) {
-      expr = expr.getExpression();
-    }
-
-    if (Node.isJsxElement(expr) || Node.isJsxSelfClosingElement(expr)) {
-      if (annotateJsxElement(expr, relPath)) {
-        changed = true;
-      }
-      if (traverseAndAnnotate(expr, relPath)) {
-        changed = true;
-      }
-    }
-  }
-
-  if (changed) {
+  // Instead of limiting ourselves to exported functions, just traverse the entire file:
+  const fileChanged = traverseAndAnnotate(sourceFile, relPath);
+  if (fileChanged) {
     sourceFile.saveSync();
+    changed = true;
   }
+
   return changed;
 }
 

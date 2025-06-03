@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "predev": "npx tsx inject-data-block-id.ts",
+    "postdev": "npx tsx remove-data-block-ids.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
