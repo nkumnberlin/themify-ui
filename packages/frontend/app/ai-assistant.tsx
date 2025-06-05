@@ -3,7 +3,6 @@
 import { ReactNode, useState } from "react";
 import ChatArea, { BloomingLoadingText } from "@/components/chat";
 import { LLMType } from "@/ai/interface";
-import { ModeToggle } from "@ui/toogle-dark-mode";
 import {
   useAddGranularUserFeedbackCoder,
   useLLMCoder,
@@ -42,6 +41,7 @@ export default function AiAssistant({ children }: AIAssistantProps) {
   const [granularUserFeedback, setGranularUserFeedback] = useState<Message[]>(
     [],
   );
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   // const sidebarWidthClass = llmType === "architect" ? "w-full" : "w-1/3";
   const sidebarWidthClass = "w-1/3";
@@ -103,13 +103,6 @@ export default function AiAssistant({ children }: AIAssistantProps) {
       },
     });
 
-    // mutateFeedback({
-    //   _llmType: "coder",
-    //   feedback: {
-    //     message,
-    //     code: codeMessages,
-    //   },
-    // });
     console.log(userMessage, dataBlockId);
   };
 
@@ -138,12 +131,40 @@ export default function AiAssistant({ children }: AIAssistantProps) {
     mutationIsPending ||
     feedbackMutationIsPending;
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <div className="flex h-screen w-full flex-row overflow-hidden">
-      <ModeToggle />
+    <div className="relative h-screen w-full overflow-hidden">
+      {/* Sidebar Overlay */}
       <aside
-        className={`min-w-[300px] border-r border-gray-800 p-4 transition-[width] duration-500 ease-in-out ${sidebarWidthClass}`}
+        className={`fixed top-0 left-0 z-50 h-full min-w-[300px] border-r border-gray-800 bg-white p-4 shadow-lg transition-transform duration-500 ease-in-out dark:bg-gray-900 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } ${sidebarWidthClass}`}
       >
+        {/* Close button */}
+        <button
+          onClick={toggleSidebar}
+          className="absolute top-4 right-4 z-10 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+          aria-label="Close sidebar"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m18 6-6 6-6-6" />
+            <path d="m6 18 6-6 6 6" />
+          </svg>
+        </button>
+
         <ChatArea
           llmType={llmType}
           switchLLMToStartCoding={switchLLMType}
@@ -153,7 +174,40 @@ export default function AiAssistant({ children }: AIAssistantProps) {
         />
       </aside>
 
-      <main className={`flex-1`}>
+      {/* Sidebar Toggle Button (when closed) */}
+      {!isSidebarOpen && (
+        <button
+          onClick={toggleSidebar}
+          className="fixed top-4 left-4 z-40 rounded-md bg-white p-3 shadow-lg hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800"
+          aria-label="Open sidebar"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 12h18m-9-9l9 9-9 9" />
+          </svg>
+        </button>
+      )}
+
+      {/* Backdrop (optional - for closing sidebar when clicking outside) */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/20"
+          onClick={toggleSidebar}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Main Content */}
+      <main className="h-full w-full">
         <FetchingIsInProcess
           isPending={isARequestPending}
           codeMessages={codeMessages}
