@@ -224,7 +224,8 @@ export default function InjectHtmlToCursor({
     originalElement: HTMLElement,
   ): ComponentInfo | null => {
     let current = fiber;
-    console.log("getComponentInfoFromFiber", current);
+    console.log("getComponentInfoFromFiber", fiber);
+    console.log("originalElement", originalElement);
 
     while (current) {
       if (current.type && typeof current.type === "function") {
@@ -252,7 +253,7 @@ export default function InjectHtmlToCursor({
           filePath = current.type.__source.fileName;
         } else {
           // Generate likely file path
-          filePath = `components/suggestions/${componentName}.tsx`;
+          filePath = `?/?/${componentName}.tsx`;
         }
         return {
           name: componentName,
