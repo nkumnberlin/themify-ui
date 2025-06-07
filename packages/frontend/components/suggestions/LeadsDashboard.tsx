@@ -1,7 +1,6 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import { Button } from "@ui/button";
-import { Input } from "@ui/input";
 import {
   Select,
   SelectContent,
@@ -210,12 +209,7 @@ export default function LeadsDashboard() {
       <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold">Leads Dashboard</h1>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Input
-            placeholder="Search leads..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-xs rounded-none"
-          />
+          {/* Removed the Input field as requested */}
           <Select
             value={filterStatus}
             onValueChange={(value) =>

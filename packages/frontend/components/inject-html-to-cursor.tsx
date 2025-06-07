@@ -14,6 +14,51 @@ type InjectHtmlToCursorProps = {
   }) => void;
 };
 
+declare global {
+  interface Window {
+    __REACT_DEVTOOLS_GLOBAL_HOOK__: any;
+    __REACT_DEVTOOLS_TARGET_WINDOW__: any;
+  }
+}
+
+interface DebugSource {
+  columnNumber?: number;
+  fileName?: string;
+  lineNumber?: number;
+}
+
+// TODO Refactoring needed ref react/packages/react-devtools-shared/src/backend/agent.js getBestMatchingRendererInterface
+export const checkDevtoolsGlobalHook = (): boolean =>
+  window.__REACT_DEVTOOLS_GLOBAL_HOOK__ &&
+  window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers &&
+  window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0 &&
+  window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.get(1);
+
+// TODO Refactoring needed ref react/packages/react-devtools-shared/src/backend/agent.js getBestMatchingRendererInterface
+const getDevtoolsGlobalHookRenderer = () => {
+  if (!checkDevtoolsGlobalHook()) return null;
+  return window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.get(1);
+};
+
+export const findFiberByHostInstance = (
+  target: HTMLElement,
+): { _debugSource: DebugSource } | null => {
+  if (!checkDevtoolsGlobalHook()) return null;
+
+  const renderer = getDevtoolsGlobalHookRenderer();
+  if (!renderer) return null;
+
+  const fiber = renderer.findFiberByHostInstance(target) || null;
+
+  if (fiber) {
+    // nandorojo: I had to add this in to fix this
+    // https://github.com/hand-dot/react-inspector/issues/9
+    fiber._debugSource ??= fiber._debugOwner?._debugSource ?? null;
+  }
+
+  return fiber?._debugSource ? fiber : null;
+};
+
 export default function InjectHtmlToCursor({
   children,
   handleGranularUserFeedback,
@@ -52,7 +97,6 @@ export default function InjectHtmlToCursor({
           parentFiber,
           current,
         );
-        console.log("parentComponentInfo", parentComponentInfo);
         if (parentComponentInfo && parentComponentInfo.name !== "Unknown") {
           return {
             ...parentComponentInfo,
@@ -224,8 +268,6 @@ export default function InjectHtmlToCursor({
     originalElement: HTMLElement,
   ): ComponentInfo | null => {
     let current = fiber;
-    console.log("getComponentInfoFromFiber", fiber);
-    console.log("originalElement", originalElement);
 
     while (current) {
       if (current.type && typeof current.type === "function") {
@@ -316,7 +358,11 @@ export default function InjectHtmlToCursor({
       if (!target) return;
 
       setHoveredElement(target);
-
+      const debTools = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+      const fiberRoots = debTools.reactDevtoolsAgent;
+      console.log("[detectorino] fiberRoots", fiberRoots);
+      // const x = findFiberByHostInstance(target);
+      // console.log("[detectorino] x", x);
       // Detect component info immediately on hover
       const componentInfo = detectComponent(target);
       setDetectedComponent(componentInfo);

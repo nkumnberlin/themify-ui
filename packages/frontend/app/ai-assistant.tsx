@@ -8,6 +8,8 @@ import {
   useLLMCoder,
   useUserFeedbackCoder,
 } from "@/hooks/use-llm-chat";
+import { Inspector } from "react-dev-inspector";
+import { Button } from "@ui/button";
 import InjectHtmlToCursor from "@/components/inject-html-to-cursor";
 
 export type AddUserFeedbackToCode = {
@@ -42,7 +44,7 @@ export default function AiAssistant({ children }: AIAssistantProps) {
     [],
   );
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-
+  const [isInspectorActive, setIsInspectorActive] = useState<boolean>(false);
   // const sidebarWidthClass = llmType === "architect" ? "w-full" : "w-1/3";
   const sidebarWidthClass = "w-1/3";
   const isArchitect = llmType === "architect";
@@ -212,6 +214,10 @@ export default function AiAssistant({ children }: AIAssistantProps) {
           isPending={isARequestPending}
           codeMessages={codeMessages}
         >
+          <Button onClick={() => setIsInspectorActive(!isInspectorActive)}>
+            Activate Inspector
+          </Button>
+          <Inspector active={isInspectorActive} />
           <InjectHtmlToCursor
             handleGranularUserFeedback={handleGranularUserFeedback}
           >
