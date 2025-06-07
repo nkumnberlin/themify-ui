@@ -8,8 +8,6 @@ import {
   useLLMCoder,
   useUserFeedbackCoder,
 } from "@/hooks/use-llm-chat";
-import { Inspector } from "react-dev-inspector";
-import { Button } from "@ui/button";
 import InjectHtmlToCursor from "@/components/inject-html-to-cursor";
 
 export type AddUserFeedbackToCode = {
@@ -214,10 +212,6 @@ export default function AiAssistant({ children }: AIAssistantProps) {
           isPending={isARequestPending}
           codeMessages={codeMessages}
         >
-          <Button onClick={() => setIsInspectorActive(!isInspectorActive)}>
-            Activate Inspector
-          </Button>
-          <Inspector active={isInspectorActive} />
           <InjectHtmlToCursor
             handleGranularUserFeedback={handleGranularUserFeedback}
           >
